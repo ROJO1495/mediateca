@@ -1,3 +1,4 @@
+Descripcion:
 Sistema desarrollado en Java para la gestion de una mediateca que permite administrar libros, revistas, CDs y DVDs con almacenamiento persistente en base de datos MySQL.
 
 Funcionalidades Implementadas
