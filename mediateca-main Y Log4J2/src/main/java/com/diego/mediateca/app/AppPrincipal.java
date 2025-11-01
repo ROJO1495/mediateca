@@ -3,23 +3,19 @@ package com.diego.mediateca.app;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Component;
-import java.awt.Font;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
+import com.diego.mediateca.VistaUsuario.VentanaMateriales;
 import com.diego.mediateca.db.DatabaseConnection;
 import com.diego.mediateca.db.MaterialDAO;
 import com.diego.mediateca.domain.CD;
@@ -119,166 +115,29 @@ public class AppPrincipal extends JFrame {
     }
 
     private void inicializarPanelLibros() {
-        librosPanel.removeAll();
-        JLabel titulo = new JLabel("LIBROS DISPONIBLES", JLabel.CENTER);
-        titulo.setFont(new Font("Arial", Font.BOLD, 18));
-        librosPanel.add(titulo, BorderLayout.NORTH);
+    librosPanel.removeAll();
+    VentanaMateriales ventana = new VentanaMateriales();
+    librosPanel.add(ventana, BorderLayout.CENTER);
+}
 
-        JTextArea areaTexto = new JTextArea();
-        areaTexto.setEditable(false);
-        areaTexto.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        JScrollPane scrollPane = new JScrollPane(areaTexto);
-        librosPanel.add(scrollPane, BorderLayout.CENTER);
+private void inicializarPanelRevistas() {
+    revistasPanel.removeAll();
+    VentanaMateriales ventana = new VentanaMateriales();
+    revistasPanel.add(ventana, BorderLayout.CENTER);
+}
 
-        cargarLibrosEnArea(areaTexto);
-    }
+private void inicializarPanelDVDs() {
+    dvdsPanel.removeAll();
+    VentanaMateriales ventana = new VentanaMateriales();
+    dvdsPanel.add(ventana, BorderLayout.CENTER);
+}
 
-    private void inicializarPanelRevistas() {
-        revistasPanel.removeAll();
-        JLabel titulo = new JLabel("REVISTAS DISPONIBLES", JLabel.CENTER);
-        titulo.setFont(new Font("Arial", Font.BOLD, 18));
-        revistasPanel.add(titulo, BorderLayout.NORTH);
+private void inicializarPanelCDs() {
+    cdsPanel.removeAll();
+    VentanaMateriales ventana = new VentanaMateriales();
+    cdsPanel.add(ventana, BorderLayout.CENTER);
+}
 
-        JTextArea areaTexto = new JTextArea();
-        areaTexto.setEditable(false);
-        areaTexto.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        JScrollPane scrollPane = new JScrollPane(areaTexto);
-        revistasPanel.add(scrollPane, BorderLayout.CENTER);
-
-        cargarRevistasEnArea(areaTexto);
-    }
-
-    private void inicializarPanelDVDs() {
-        dvdsPanel.removeAll();
-        JLabel titulo = new JLabel("DVDs DISPONIBLES", JLabel.CENTER);
-        titulo.setFont(new Font("Arial", Font.BOLD, 18));
-        dvdsPanel.add(titulo, BorderLayout.NORTH);
-
-        JTextArea areaTexto = new JTextArea();
-        areaTexto.setEditable(false);
-        areaTexto.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        JScrollPane scrollPane = new JScrollPane(areaTexto);
-        dvdsPanel.add(scrollPane, BorderLayout.CENTER);
-
-        cargarDVDsEnArea(areaTexto);
-    }
-
-    private void inicializarPanelCDs() {
-        cdsPanel.removeAll();
-        JLabel titulo = new JLabel("CDs DISPONIBLES", JLabel.CENTER);
-        titulo.setFont(new Font("Arial", Font.BOLD, 18));
-        cdsPanel.add(titulo, BorderLayout.NORTH);
-
-        JTextArea areaTexto = new JTextArea();
-        areaTexto.setEditable(false);
-        areaTexto.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        JScrollPane scrollPane = new JScrollPane(areaTexto);
-        cdsPanel.add(scrollPane, BorderLayout.CENTER);
-
-        cargarCDsEnArea(areaTexto);
-    }
-
-    private void cargarLibrosEnArea(JTextArea areaTexto) {
-        try {
-            List<Libro> libros = materialDAO.listarLibrosDisponibles();
-            StringBuilder sb = new StringBuilder();
-            sb.append(String.format("%-10s %-30s %-20s %-15s %-8s%n",
-                    "ID", "TÍTULO", "AUTOR", "EDITORIAL", "UNIDADES"));
-            sb.append("--------------------------------------------------------------------------------\n");
-            for (Libro libro : libros) {
-                sb.append(String.format("%-10s %-30s %-20s %-15s %-8d%n",
-                        libro.getIdInterno(),
-                        limitarTexto(libro.getTitulo(), 28),
-                        limitarTexto(libro.getAutor(), 18),
-                        limitarTexto(libro.getEditorial(), 13),
-                        libro.getUnidadesDisponibles()));
-            }
-            areaTexto.setText(sb.toString());
-        } catch (Exception e) {
-            System.err.println("Error al cargar libros: " + e.getMessage());
-            e.printStackTrace();
-            areaTexto.setText("Error al cargar libros: " + e.getMessage());
-        }
-    }
-
-    private void cargarRevistasEnArea(JTextArea areaTexto) {
-        try {
-            List<Revista> revistas = materialDAO.listarRevistasDisponibles();
-            StringBuilder sb = new StringBuilder();
-            sb.append(String.format("%-10s %-30s %-15s %-12s %-15s %-8s%n",
-                    "ID", "TÍTULO", "EDITORIAL", "PERIODICIDAD", "FECHA", "UNIDADES"));
-            sb.append("------------------------------------------------------------------------------------------\n");
-            for (Revista revista : revistas) {
-                sb.append(String.format("%-10s %-30s %-15s %-12s %-15s %-8d%n",
-                        revista.getIdInterno(),
-                        limitarTexto(revista.getTitulo(), 28),
-                        limitarTexto(revista.getEditorial(), 13),
-                        limitarTexto(revista.getPeriodicidad(), 10),
-                        revista.getFechaPublicacion().toString(),
-                        revista.getUnidadesDisponibles()));
-            }
-            areaTexto.setText(sb.toString());
-        } catch (Exception e) {
-            System.err.println("Error al cargar revistas: " + e.getMessage());
-            e.printStackTrace();
-            areaTexto.setText("Error al cargar revistas: " + e.getMessage());
-        }
-    }
-
-    private void cargarDVDsEnArea(JTextArea areaTexto) {
-        try {
-            List<DVD> dvds = materialDAO.listarDVDsDisponibles();
-            StringBuilder sb = new StringBuilder();
-            sb.append(String.format("%-10s %-30s %-20s %-10s %-15s %-8s%n",
-                    "ID", "TÍTULO", "DIRECTOR", "DURACIÓN", "GÉNERO", "UNIDADES"));
-            sb.append("------------------------------------------------------------------------------------------\n");
-            for (DVD dvd : dvds) {
-                sb.append(String.format("%-10s %-30s %-20s %-10s %-15s %-8d%n",
-                        dvd.getIdInterno(),
-                        limitarTexto(dvd.getTitulo(), 28),
-                        limitarTexto(dvd.getDirector(), 18),
-                        limitarTexto(dvd.getDuracion(), 8),
-                        limitarTexto(dvd.getGenero(), 13),
-                        dvd.getUnidadesDisponibles()));
-            }
-            areaTexto.setText(sb.toString());
-        } catch (Exception e) {
-            System.err.println("Error al cargar DVDs: " + e.getMessage());
-            e.printStackTrace();
-            areaTexto.setText("Error al cargar DVDs: " + e.getMessage());
-        }
-    }
-
-    private void cargarCDsEnArea(JTextArea areaTexto) {
-        try {
-            List<CD> cds = materialDAO.listarCDsDisponibles();
-            StringBuilder sb = new StringBuilder();
-            sb.append(String.format("%-10s %-30s %-20s %-15s %-10s %-6s %-8s%n",
-                    "ID", "TÍTULO", "ARTISTA", "GÉNERO", "DURACIÓN", "CANC.", "UNIDADES"));
-            sb.append("----------------------------------------------------------------------------------------------------\n");
-            for (CD cd : cds) {
-                sb.append(String.format("%-10s %-30s %-20s %-15s %-10s %-6d %-8d%n",
-                        cd.getIdInterno(),
-                        limitarTexto(cd.getTitulo(), 28),
-                        limitarTexto(cd.getArtista(), 18),
-                        limitarTexto(cd.getGenero(), 13),
-                        limitarTexto(cd.getDuracion(), 8),
-                        cd.getNumeroCanciones(),
-                        cd.getUnidadesDisponibles()));
-            }
-            areaTexto.setText(sb.toString());
-        } catch (Exception e) {
-            System.err.println("Error al cargar CDs: " + e.getMessage());
-            e.printStackTrace();
-            areaTexto.setText("Error al cargar CDs: " + e.getMessage());
-        }
-    }
-
-    private String limitarTexto(String texto, int longitud) {
-        if (texto == null) return "";
-        if (texto.length() <= longitud) return texto;
-        return texto.substring(0, longitud - 3) + "...";
-    }
 
     private void crearMenu() {
         JMenuBar mb = new JMenuBar();

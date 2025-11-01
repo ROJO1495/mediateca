@@ -1,10 +1,24 @@
 package com.diego.mediateca.VistaUsuario;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+
 import com.diego.mediateca.domain.CD;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class AgregarCD extends JDialog {
     private JTextField txtCodigo, txtTitulo, txtArtista, txtGenero, txtDuracion, txtCanciones, txtUnidades;
@@ -18,58 +32,87 @@ public class AgregarCD extends JDialog {
     }
 
     private void inicializarComponentes() {
-        setLayout(new GridLayout(8, 2, 10, 10));
-        setSize(400, 350);
+        setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout(15, 15));
+        mainPanel.setBackground(new Color(245, 245, 245));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Panel de título
+        JLabel titleLabel = new JLabel("Agregar Nuevo CD de Audio");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        titleLabel.setForeground(new Color(33, 150, 243));
+        mainPanel.add(titleLabel, BorderLayout.NORTH);
+
+        // Panel de formulario
+        JPanel formPanel = new JPanel();
+        formPanel.setLayout(new GridBagLayout());
+        formPanel.setBackground(new Color(245, 245, 245));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Campos
+        String[] labels = {"Código (CDA00000):", "Título:", "Artista:", "Género:", 
+                          "Duración (HH:MM):", "Número de Canciones:", "Unidades Disponibles:"};
+        JTextField[] fields = new JTextField[7];
+
+        for (int i = 0; i < labels.length; i++) {
+            JLabel label = new JLabel(labels[i]);
+            label.setFont(new Font("Arial", Font.PLAIN, 11));
+            gbc.gridx = 0;
+            gbc.gridy = i;
+            gbc.weightx = 0.3;
+            formPanel.add(label, gbc);
+
+            fields[i] = new JTextField(20);
+            fields[i].setFont(new Font("Arial", Font.PLAIN, 11));
+            fields[i].setBackground(Color.WHITE);
+            fields[i].setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
+            gbc.gridx = 1;
+            gbc.weightx = 0.7;
+            formPanel.add(fields[i], gbc);
+        }
+
+        txtCodigo = fields[0];
+        txtTitulo = fields[1];
+        txtArtista = fields[2];
+        txtGenero = fields[3];
+        txtDuracion = fields[4];
+        txtCanciones = fields[5];
+        txtUnidades = fields[6];
+
+        mainPanel.add(formPanel, BorderLayout.CENTER);
+
+        // Panel de botones
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        buttonPanel.setBackground(new Color(245, 245, 245));
+
+        btnAgregar = new JButton("✓ Agregar CD");
+        btnAgregar.setFont(new Font("Arial", Font.PLAIN, 12));
+        btnAgregar.setBackground(new Color(76, 175, 80));
+        btnAgregar.setForeground(Color.WHITE);
+        btnAgregar.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
+        btnAgregar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnAgregar.addActionListener(e -> agregarCD());
+
+        btnCancelar = new JButton("✕ Cancelar");
+        btnCancelar.setFont(new Font("Arial", Font.PLAIN, 12));
+        btnCancelar.setBackground(new Color(244, 67, 54));
+        btnCancelar.setForeground(Color.WHITE);
+        btnCancelar.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
+        btnCancelar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnCancelar.addActionListener(e -> dispose());
+
+        buttonPanel.add(btnAgregar);
+        buttonPanel.add(btnCancelar);
+
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        add(mainPanel);
+        setSize(500, 380);
         setLocationRelativeTo(getParent());
-
-        // Componentes de la interfaz
-        add(new JLabel("Código (CDA00000):"));
-        txtCodigo = new JTextField();
-        add(txtCodigo);
-
-        add(new JLabel("Título:"));
-        txtTitulo = new JTextField();
-        add(txtTitulo);
-
-        add(new JLabel("Artista:"));
-        txtArtista = new JTextField();
-        add(txtArtista);
-
-        add(new JLabel("Género:"));
-        txtGenero = new JTextField();
-        add(txtGenero);
-
-        add(new JLabel("Duración:"));
-        txtDuracion = new JTextField();
-        add(txtDuracion);
-
-        add(new JLabel("Número de Canciones:"));
-        txtCanciones = new JTextField();
-        add(txtCanciones);
-
-        add(new JLabel("Unidades Disponibles:"));
-        txtUnidades = new JTextField();
-        add(txtUnidades);
-
-        btnAgregar = new JButton("Agregar CD");
-        btnCancelar = new JButton("Cancelar");
-
-        btnAgregar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                agregarCD();
-            }
-        });
-
-        btnCancelar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dispose();
-            }
-        });
-
-        add(btnAgregar);
-        add(btnCancelar);
+        setResizable(false);
     }
 
     private void agregarCD() {
@@ -85,37 +128,44 @@ public class AgregarCD extends JDialog {
             // Validaciones
             if (codigo.isEmpty() || titulo.isEmpty() || artista.isEmpty() ||
                     genero.isEmpty() || duracion.isEmpty()) {
-                JOptionPane.showMessageDialog(this,
-                        "Por favor complete todos los campos obligatorios",
-                        "Error", JOptionPane.ERROR_MESSAGE);
+                showError("Por favor complete todos los campos obligatorios");
                 return;
             }
 
             if (!codigo.matches("CDA\\d{5}")) {
-                JOptionPane.showMessageDialog(this,
-                        "El código debe tener el formato CDA00000",
-                        "Error", JOptionPane.ERROR_MESSAGE);
+                showError("El código debe tener el formato CDA00000");
+                return;
+            }
+
+            if (numeroCanciones <= 0) {
+                showError("El número de canciones debe ser mayor a 0");
+                return;
+            }
+
+            if (unidades < 0) {
+                showError("Las unidades no pueden ser negativas");
                 return;
             }
 
             // Crear nuevo CD
             cdCreado = new CD(codigo, titulo, unidades, artista, genero, duracion, numeroCanciones);
             agregadoExitosamente = true;
-
-            JOptionPane.showMessageDialog(this,
-                    "CD agregado exitosamente!\n" + cdCreado.toString(),
-                    "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            
+            showSuccess("CD agregado exitosamente!\n" + cdCreado);
             dispose();
-
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this,
-                    "Por favor ingrese valores numéricos válidos para canciones y unidades",
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            showError("Por favor ingrese valores numéricos válidos");
         } catch (IllegalArgumentException e) {
-            JOptionPane.showMessageDialog(this,
-                    e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            showError(e.getMessage());
         }
+    }
+
+    private void showError(String message) {
+        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private void showSuccess(String message) {
+        JOptionPane.showMessageDialog(this, message, "Éxito", JOptionPane.INFORMATION_MESSAGE);
     }
 
     public CD getCDCreado() {
