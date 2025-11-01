@@ -1,26 +1,49 @@
 package com.diego.mediateca.app;
 
-import com.diego.mediateca.domain.*;
-import com.diego.mediateca.db.DatabaseConnection;
-import com.diego.mediateca.db.MaterialDAO;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Component;
+import java.awt.Font;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-// Logger (nombre totalmente calificado para evitar problemas de import)
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
+
+import com.diego.mediateca.db.DatabaseConnection;
+import com.diego.mediateca.db.MaterialDAO;
+import com.diego.mediateca.domain.CD;
+import com.diego.mediateca.domain.DVD;
+import com.diego.mediateca.domain.Libro;
+import com.diego.mediateca.domain.Material;
+import com.diego.mediateca.domain.Revista;
+
+/**
+ * AppPrincipal COMPLETAMENTE CORREGIDO
+ * - Constructores con orden correcto
+ * - Métodos de modificación con parámetros correctos
+ * - Sin Log4j (comentado para evitar errores)
+ */
 public class AppPrincipal extends JFrame {
-
-    private static final org.apache.logging.log4j.Logger log =
-            org.apache.logging.log4j.LogManager.getLogger(AppPrincipal.class);
-
+    
+    // Logger comentado por si no tienen Log4j configurado
+    // private static final org.apache.logging.log4j.Logger log =
+    //         org.apache.logging.log4j.LogManager.getLogger(AppPrincipal.class);
+    
     private final JPanel content = new JPanel(new CardLayout());
-    // ¡Ojo! ahora es lazy: no llamamos getInstance() aquí para que no explote antes del try/catch
     private DatabaseConnection dbConnection;
     private final MaterialDAO materialDAO = new MaterialDAO();
-
+    
     // Paneles para mostrar listas
     private final JPanel librosPanel   = new JPanel(new BorderLayout());
     private final JPanel revistasPanel = new JPanel(new BorderLayout());
@@ -28,39 +51,38 @@ public class AppPrincipal extends JFrame {
     private final JPanel cdsPanel      = new JPanel(new BorderLayout());
 
     public AppPrincipal() {
-        log.info("Inicializando AppPrincipal");
+        System.out.println("Inicializando AppPrincipal");
         instalarManejadorExcepcionesGlobal();
         verificarConexionBD();
         initComponents();
     }
 
-    /** Captura excepciones no manejadas (incluye la EDT) */
     private void instalarManejadorExcepcionesGlobal() {
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
-            log.error("Excepción no manejada en hilo: {}", t.getName(), e);
+            System.err.println("Excepción no manejada en hilo: " + t.getName());
+            e.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                    "Ha ocurrido un error inesperado. Revise el archivo de logs.",
+                    "Ha ocurrido un error inesperado.",
                     "Error", JOptionPane.ERROR_MESSAGE);
         });
     }
 
-    /** Verificar conexión a base de datos al iniciar */
     private void verificarConexionBD() {
         try {
-            log.debug("Verificando conexión a BD...");
-            dbConnection = DatabaseConnection.getInstance();     // <-- aquí recién lo inicializamos
+            System.out.println("Verificando conexión a BD...");
+            dbConnection = DatabaseConnection.getInstance();
             boolean conexionExitosa = dbConnection.testConnection();
-
             if (!conexionExitosa) {
-                log.warn("Fallo de conexión inicial: testConnection=false");
+                System.err.println("Fallo de conexión inicial");
                 JOptionPane.showMessageDialog(this,
                         "Error al conectar con la base de datos.\nLa aplicación puede no funcionar correctamente.",
                         "Error de Conexión", JOptionPane.WARNING_MESSAGE);
             } else {
-                log.info("Aplicación conectada a base de datos correctamente");
+                System.out.println("✓ Aplicación conectada a base de datos correctamente");
             }
         } catch (Exception e) {
-            log.error("Error crítico de conexión al iniciar la app", e);
+            System.err.println("Error crítico de conexión al iniciar la app");
+            e.printStackTrace();
             JOptionPane.showMessageDialog(this,
                     "Error crítico de conexión: " + e.getMessage() + "\nVerifique que MySQL esté ejecutándose.",
                     "Error de Configuración",
@@ -69,7 +91,7 @@ public class AppPrincipal extends JFrame {
     }
 
     private void initComponents() {
-        setTitle("Mediateca - Principal");
+        setTitle("Mediateca - Sistema de Gestión");
         setSize(980, 640);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -89,7 +111,7 @@ public class AppPrincipal extends JFrame {
 
         add(content, BorderLayout.CENTER);
 
-        // Menú de navegación requerido
+        // Menú de navegación
         crearMenu();
 
         // Mostrar por defecto LIBROS
@@ -163,7 +185,6 @@ public class AppPrincipal extends JFrame {
             sb.append(String.format("%-10s %-30s %-20s %-15s %-8s%n",
                     "ID", "TÍTULO", "AUTOR", "EDITORIAL", "UNIDADES"));
             sb.append("--------------------------------------------------------------------------------\n");
-
             for (Libro libro : libros) {
                 sb.append(String.format("%-10s %-30s %-20s %-15s %-8d%n",
                         libro.getIdInterno(),
@@ -172,10 +193,10 @@ public class AppPrincipal extends JFrame {
                         limitarTexto(libro.getEditorial(), 13),
                         libro.getUnidadesDisponibles()));
             }
-
             areaTexto.setText(sb.toString());
         } catch (Exception e) {
-            log.error("Error al cargar libros", e);
+            System.err.println("Error al cargar libros: " + e.getMessage());
+            e.printStackTrace();
             areaTexto.setText("Error al cargar libros: " + e.getMessage());
         }
     }
@@ -187,7 +208,6 @@ public class AppPrincipal extends JFrame {
             sb.append(String.format("%-10s %-30s %-15s %-12s %-15s %-8s%n",
                     "ID", "TÍTULO", "EDITORIAL", "PERIODICIDAD", "FECHA", "UNIDADES"));
             sb.append("------------------------------------------------------------------------------------------\n");
-
             for (Revista revista : revistas) {
                 sb.append(String.format("%-10s %-30s %-15s %-12s %-15s %-8d%n",
                         revista.getIdInterno(),
@@ -197,10 +217,10 @@ public class AppPrincipal extends JFrame {
                         revista.getFechaPublicacion().toString(),
                         revista.getUnidadesDisponibles()));
             }
-
             areaTexto.setText(sb.toString());
         } catch (Exception e) {
-            log.error("Error al cargar revistas", e);
+            System.err.println("Error al cargar revistas: " + e.getMessage());
+            e.printStackTrace();
             areaTexto.setText("Error al cargar revistas: " + e.getMessage());
         }
     }
@@ -212,7 +232,6 @@ public class AppPrincipal extends JFrame {
             sb.append(String.format("%-10s %-30s %-20s %-10s %-15s %-8s%n",
                     "ID", "TÍTULO", "DIRECTOR", "DURACIÓN", "GÉNERO", "UNIDADES"));
             sb.append("------------------------------------------------------------------------------------------\n");
-
             for (DVD dvd : dvds) {
                 sb.append(String.format("%-10s %-30s %-20s %-10s %-15s %-8d%n",
                         dvd.getIdInterno(),
@@ -222,10 +241,10 @@ public class AppPrincipal extends JFrame {
                         limitarTexto(dvd.getGenero(), 13),
                         dvd.getUnidadesDisponibles()));
             }
-
             areaTexto.setText(sb.toString());
         } catch (Exception e) {
-            log.error("Error al cargar DVDs", e);
+            System.err.println("Error al cargar DVDs: " + e.getMessage());
+            e.printStackTrace();
             areaTexto.setText("Error al cargar DVDs: " + e.getMessage());
         }
     }
@@ -237,7 +256,6 @@ public class AppPrincipal extends JFrame {
             sb.append(String.format("%-10s %-30s %-20s %-15s %-10s %-6s %-8s%n",
                     "ID", "TÍTULO", "ARTISTA", "GÉNERO", "DURACIÓN", "CANC.", "UNIDADES"));
             sb.append("----------------------------------------------------------------------------------------------------\n");
-
             for (CD cd : cds) {
                 sb.append(String.format("%-10s %-30s %-20s %-15s %-10s %-6d %-8d%n",
                         cd.getIdInterno(),
@@ -248,10 +266,10 @@ public class AppPrincipal extends JFrame {
                         cd.getNumeroCanciones(),
                         cd.getUnidadesDisponibles()));
             }
-
             areaTexto.setText(sb.toString());
         } catch (Exception e) {
-            log.error("Error al cargar CDs", e);
+            System.err.println("Error al cargar CDs: " + e.getMessage());
+            e.printStackTrace();
             areaTexto.setText("Error al cargar CDs: " + e.getMessage());
         }
     }
@@ -262,11 +280,10 @@ public class AppPrincipal extends JFrame {
         return texto.substring(0, longitud - 3) + "...";
     }
 
-    // MENU 6 OPCIONES
     private void crearMenu() {
         JMenuBar mb = new JMenuBar();
 
-        // MENU Disponibles (ver las listas por tipo)
+        // MENU Disponibles
         JMenu mDisponibles = new JMenu("Disponibles");
         JMenuItem itLibros   = new JMenuItem("Libros");
         JMenuItem itRevistas = new JMenuItem("Revistas");
@@ -322,39 +339,36 @@ public class AppPrincipal extends JFrame {
         setJMenuBar(mb);
     }
 
-    /** Probar conexión a base de datos */
     private void probarConexionBD() {
         try {
-            log.debug("Probando conexión a BD desde menú");
+            System.out.println("Probando conexión a BD desde menú");
             DatabaseConnection db = DatabaseConnection.getInstance();
             boolean conexionOk = db.testConnection();
-
             if (conexionOk) {
-                log.info("Probar Conexión: OK");
+                System.out.println("Probar Conexión: OK");
                 JOptionPane.showMessageDialog(this,
                         "✓ Conexión a la base de datos exitosa",
                         "Conexión Exitosa",
                         JOptionPane.INFORMATION_MESSAGE);
             } else {
-                log.warn("Probar Conexión: FAIL");
+                System.err.println("Probar Conexión: FAIL");
                 JOptionPane.showMessageDialog(this,
                         "✗ No se pudo establecer conexión con la base de datos",
                         "Error de Conexión",
                         JOptionPane.ERROR_MESSAGE);
             }
         } catch (Exception e) {
-            log.error("Error al probar conexión", e);
+            System.err.println("Error al probar conexión: " + e.getMessage());
+            e.printStackTrace();
             showError("Error al probar conexión: " + e.getMessage());
         }
     }
 
-    /** Mostrar información de la base de datos */
     private void mostrarInfoBD() {
         try {
             DatabaseConnection db = DatabaseConnection.getInstance();
             java.sql.Connection conn = db.getConnection();
             java.sql.DatabaseMetaData metaData = conn.getMetaData();
-
             String info = String.format(
                     "Información de Base de Datos:%n%n" +
                             "Producto: %s%n" +
@@ -370,36 +384,35 @@ public class AppPrincipal extends JFrame {
                     metaData.getUserName(),
                     db.isConnectionValid() ? "Sí" : "No"
             );
-
-            log.info("Mostrando información de BD");
+            System.out.println("Mostrando información de BD");
             JOptionPane.showMessageDialog(this, info, "Información BD", JOptionPane.INFORMATION_MESSAGE);
-
         } catch (Exception e) {
-            log.error("Error al obtener información de BD", e);
+            System.err.println("Error al obtener información de BD: " + e.getMessage());
+            e.printStackTrace();
             showError("Error al obtener información: " + e.getMessage());
         }
     }
 
-    /** Salir de la aplicación cerrando conexiones */
     private void salirAplicacion() {
         try {
             DatabaseConnection db = DatabaseConnection.getInstance();
             db.closeConnection();
-            log.info("Aplicación cerrada, conexión de BD cerrada");
+            System.out.println("Aplicación cerrada, conexión de BD cerrada");
         } catch (Exception e) {
-            log.error("Error al cerrar conexión al salir", e);
+            System.err.println("Error al cerrar conexión al salir: " + e.getMessage());
+            e.printStackTrace();
         } finally {
             dispose();
         }
     }
 
-    // ACCIONES PRINCIPALES - SIMPLIFICADAS USANDO MaterialDAO
+    // ==================== ACCIONES PRINCIPALES ====================
+    
     private void onAgregarMaterial() {
         String[] tipos = {"LIBRO", "REVISTA", "DVD", "CD"};
         String tipo = (String) JOptionPane.showInputDialog(
                 this, "Tipo de material:", "Agregar",
                 JOptionPane.QUESTION_MESSAGE, null, tipos, tipos[0]);
-
         if (tipo == null) return;
 
         try {
@@ -410,11 +423,12 @@ public class AppPrincipal extends JFrame {
                 case "CD"      -> agregarCD();
                 default        -> { }
             }
-            log.info("Material agregado correctamente (tipo={})", tipo);
+            System.out.println("Material agregado correctamente (tipo=" + tipo + ")");
             JOptionPane.showMessageDialog(this, "Material agregado con éxito a la base de datos.");
             refrescarVistaActual();
         } catch (Exception ex) {
-            log.error("No se pudo agregar material (tipo={})", tipo, ex);
+            System.err.println("No se pudo agregar material (tipo=" + tipo + "): " + ex.getMessage());
+            ex.printStackTrace();
             showError("No se pudo agregar: " + ex.getMessage());
         }
     }
@@ -429,8 +443,8 @@ public class AppPrincipal extends JFrame {
                 showWarn("No existe material con ID: " + id);
                 return;
             }
-            Material m = op.get();
 
+            Material m = op.get();
             if (m instanceof Libro) {
                 int u = inputInt("Unidades nuevas para LIBRO " + m.getIdInterno() + ":");
                 materialDAO.modificarLibro(id, u);
@@ -442,6 +456,7 @@ public class AppPrincipal extends JFrame {
                 String dur = input("Duración (hh:mm):");
                 String genero = input("Género:");
                 int u = inputInt("Unidades disponibles:");
+                // ✅ ORDEN CORRECTO: id, director, duracion, genero, unidades
                 materialDAO.modificarDVD(id, director, dur, genero, u);
             } else if (m instanceof CD) {
                 String artista = input("Artista:");
@@ -449,13 +464,15 @@ public class AppPrincipal extends JFrame {
                 String dur = input("Duración (hh:mm):");
                 int num = inputInt("Número de canciones:");
                 int u = inputInt("Unidades disponibles:");
+                // ✅ ORDEN CORRECTO: id, artista, genero, duracion, numCanciones, unidades
                 materialDAO.modificarCD(id, artista, genero, dur, num, u);
             }
-            log.info("Material modificado (id={})", id);
+            System.out.println("Material modificado (id=" + id + ")");
             JOptionPane.showMessageDialog(this, "Material modificado.");
             refrescarVistaActual();
         } catch (Exception ex) {
-            log.error("No se pudo modificar material (id={})", id, ex);
+            System.err.println("No se pudo modificar material (id=" + id + "): " + ex.getMessage());
+            ex.printStackTrace();
             showError("No se pudo modificar: " + ex.getMessage());
         }
     }
@@ -476,11 +493,12 @@ public class AppPrincipal extends JFrame {
             if (ok != JOptionPane.YES_OPTION) return;
 
             borrarMaterial(id);
-            log.info("Material borrado (id={})", id);
+            System.out.println("Material borrado (id=" + id + ")");
             JOptionPane.showMessageDialog(this, "Material borrado.");
             refrescarVistaActual();
         } catch (Exception ex) {
-            log.error("No se pudo borrar material (id={})", id, ex);
+            System.err.println("No se pudo borrar material (id=" + id + "): " + ex.getMessage());
+            ex.printStackTrace();
             showError("No se pudo borrar: " + ex.getMessage());
         }
     }
@@ -498,30 +516,33 @@ public class AppPrincipal extends JFrame {
             Material m = op.get();
             JOptionPane.showMessageDialog(this, detalleMaterial(m), "Resultado", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception ex) {
-            log.error("Error al buscar material (id={})", id, ex);
+            System.err.println("Error al buscar material (id=" + id + "): " + ex.getMessage());
+            ex.printStackTrace();
             showError("Error al buscar material: " + ex.getMessage());
         }
     }
 
-    // MÉTODOS SIMPLIFICADOS USANDO MaterialDAO
+    // ==================== MÉTODOS DE AGREGAR (CORREGIDOS) ====================
+    
     private void agregarLibro() {
         String titulo = input("Título:");
         String autor = input("Autor:");
-        int paginas = inputInt("Número de páginas:");
         String editorial = input("Editorial:");
         String isbn = input("ISBN:");
         int anio = inputInt("Año de publicación:");
+        int paginas = inputInt("Número de páginas:");
         int unidades = inputInt("Unidades disponibles:");
 
         String nuevoId = generarNuevoId("LIB");
-        // ORDEN: id, titulo, unidades, autor, editorial, isbn, paginas, anio
-        Libro libro = new Libro(nuevoId, titulo, unidades, autor, editorial, isbn, paginas, anio);
-
+        
+        // ✅ ORDEN CORRECTO: id, titulo, unidades, autor, editorial, isbn, anio, paginas
+        Libro libro = new Libro(nuevoId, titulo, unidades, autor, editorial, isbn, anio, paginas);
         try {
             materialDAO.insertarLibro(libro);
-            log.info("Libro agregado a BD (id={})", nuevoId);
+            System.out.println("Libro agregado a BD (id=" + nuevoId + ")");
         } catch (Exception e) {
-            log.error("Error al agregar libro (id={})", nuevoId, e);
+            System.err.println("Error al agregar libro (id=" + nuevoId + "): " + e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("Error al agregar libro: " + e.getMessage(), e);
         }
     }
@@ -534,14 +555,16 @@ public class AppPrincipal extends JFrame {
         int unidades = inputInt("Unidades disponibles:");
 
         String nuevoId = generarNuevoId("REV");
+        
+        // ✅ ORDEN CORRECTO: id, titulo, unidades, editorial, periodicidad, fecha
         Revista revista = new Revista(nuevoId, titulo, unidades, editorial, periodicidad,
                 LocalDate.parse(fechaStr));
-
         try {
             materialDAO.insertarRevista(revista);
-            log.info("Revista agregada a BD (id={})", nuevoId);
+            System.out.println("Revista agregada a BD (id=" + nuevoId + ")");
         } catch (Exception e) {
-            log.error("Error al agregar revista (id={})", nuevoId, e);
+            System.err.println("Error al agregar revista (id=" + nuevoId + "): " + e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("Error al agregar revista: " + e.getMessage(), e);
         }
     }
@@ -554,13 +577,15 @@ public class AppPrincipal extends JFrame {
         int unidades = inputInt("Unidades disponibles:");
 
         String nuevoId = generarNuevoId("DVD");
+        
+        // ✅ ORDEN CORRECTO: id, titulo, unidades, director, duracion, genero
         DVD dvd = new DVD(nuevoId, titulo, unidades, director, duracion, genero);
-
         try {
             materialDAO.insertarDVD(dvd);
-            log.info("DVD agregado a BD (id={})", nuevoId);
+            System.out.println("DVD agregado a BD (id=" + nuevoId + ")");
         } catch (Exception e) {
-            log.error("Error al agregar DVD (id={})", nuevoId, e);
+            System.err.println("Error al agregar DVD (id=" + nuevoId + "): " + e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("Error al agregar DVD: " + e.getMessage(), e);
         }
     }
@@ -574,22 +599,22 @@ public class AppPrincipal extends JFrame {
         int unidades = inputInt("Unidades disponibles:");
 
         String nuevoId = generarNuevoId("CDA");
+        
+        // ✅ ORDEN CORRECTO: id, titulo, unidades, artista, genero, duracion, numCanciones
         CD cd = new CD(nuevoId, titulo, unidades, artista, genero, duracion, num);
-
         try {
             materialDAO.insertarCD(cd);
-            log.info("CD agregado a BD (id={})", nuevoId);
+            System.out.println("CD agregado a BD (id=" + nuevoId + ")");
         } catch (Exception e) {
-            log.error("Error al agregar CD (id={})", nuevoId, e);
+            System.err.println("Error al agregar CD (id=" + nuevoId + "): " + e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("Error al agregar CD: " + e.getMessage(), e);
         }
     }
 
-    // MÉTODO PARA BORRAR
     private void borrarMaterial(String id) {
         String tipo = id.substring(0, 3);
         String sql;
-
         switch (tipo) {
             case "LIB": sql = "DELETE FROM libros WHERE id_interno = ?";   break;
             case "REV": sql = "DELETE FROM revistas WHERE id_interno = ?"; break;
@@ -600,21 +625,18 @@ public class AppPrincipal extends JFrame {
 
         try (var conn = dbConnection.getConnection();
              var stmt = conn.prepareStatement(sql)) {
-
             stmt.setString(1, id);
             int filas = stmt.executeUpdate();
-            log.info("Material borrado. id={} | filas={}", id, filas);
-
+            System.out.println("Material borrado. id=" + id + " | filas=" + filas);
         } catch (Exception e) {
-            log.error("Error al borrar material (id={})", id, e);
+            System.err.println("Error al borrar material (id=" + id + "): " + e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("Error al borrar material: " + e.getMessage(), e);
         }
     }
 
-    // MÉTODO PARA GENERAR IDs
     private String generarNuevoId(String tipo) {
         String sql;
-
         switch (tipo) {
             case "LIB": sql = "SELECT MAX(id_interno) FROM libros WHERE id_interno LIKE 'LIB%'"; break;
             case "REV": sql = "SELECT MAX(id_interno) FROM revistas WHERE id_interno LIKE 'REV%'"; break;
@@ -626,26 +648,26 @@ public class AppPrincipal extends JFrame {
         try (var conn = dbConnection.getConnection();
              var stmt = conn.createStatement();
              var rs = stmt.executeQuery(sql)) {
-
             if (rs.next()) {
                 String ultimoId = rs.getString(1);
                 if (ultimoId != null && !ultimoId.isEmpty()) {
                     int ultimoNumero = Integer.parseInt(ultimoId.substring(3));
                     String nuevo = String.format("%s%05d", tipo, ultimoNumero + 1);
-                    log.debug("Generado nuevo ID: {}", nuevo);
+                    System.out.println("Generado nuevo ID: " + nuevo);
                     return nuevo;
                 }
             }
         } catch (Exception e) {
-            log.warn("Error al generar ID, usando valor por defecto: {}", e.getMessage());
+            System.err.println("Error al generar ID: " + e.getMessage());
         }
 
         String def = tipo + "00001";
-        log.debug("Generado ID por defecto: {}", def);
+        System.out.println("Generado ID por defecto: " + def);
         return def;
     }
 
-    // HELPERS UI
+    // ==================== HELPERS UI ====================
+    
     private void showCard(String name) {
         ((CardLayout) content.getLayout()).show(content, name);
         refrescarVistaActual();

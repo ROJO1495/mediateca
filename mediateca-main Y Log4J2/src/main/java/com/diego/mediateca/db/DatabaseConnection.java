@@ -1,9 +1,16 @@
 package com.diego.mediateca.db;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
- * Clase para gestionar la conexión a la base de datos MySQL
+ * DatabaseConnection 
+ * Ahora isConnectionValid() es PUBLIC
  */
 public class DatabaseConnection {
     
@@ -12,10 +19,8 @@ public class DatabaseConnection {
 
     private DatabaseConnection() {
         try {
-            // Cargar el driver de MySQL
             Class.forName(DatabaseConfig.DB_DRIVER);
             
-            // Establecer conexión
             this.connection = DriverManager.getConnection(
                 DatabaseConfig.DB_URL,
                 DatabaseConfig.DB_USER,
@@ -23,8 +28,6 @@ public class DatabaseConnection {
             );
             
             System.out.println("✓ Conexión a base de datos establecida exitosamente");
-            
-            // Crear las tablas si no existen
             crearTablasIniciales();
             
         } catch (ClassNotFoundException e) {
@@ -34,23 +37,16 @@ public class DatabaseConnection {
         }
     }
 
-    /**
-     * Obtiene la instancia única de DatabaseConnection (Patrón Singleton)
-     */
     public static DatabaseConnection getInstance() {
-        if (instance == null || !isConnectionValid()) {
+        if (instance == null || !isInstanceValid()) {
             instance = new DatabaseConnection();
         }
         return instance;
     }
 
-    /**
-     * Obtiene la conexión a la base de datos
-     */
     public Connection getConnection() {
         try {
             if (connection == null || connection.isClosed()) {
-                // Reconectar si la conexión está cerrada
                 connection = DriverManager.getConnection(
                     DatabaseConfig.DB_URL,
                     DatabaseConfig.DB_USER,
@@ -63,10 +59,18 @@ public class DatabaseConnection {
         return connection;
     }
 
-    /**
-     * Verifica si la conexión es válida
-     */
-    private static boolean isConnectionValid() {
+    //  PUBLIC PARA QUE AppPrincipal PUEDA LLAMARLO
+    public boolean isConnectionValid() {
+        try {
+            return connection != null && 
+                   !connection.isClosed() &&
+                   connection.isValid(2);
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    private static boolean isInstanceValid() {
         try {
             return instance != null && 
                    instance.connection != null && 
@@ -77,19 +81,12 @@ public class DatabaseConnection {
         }
     }
 
-    /**
-     * NOTA: Las tablas ya no se crean aquí automáticamente
-     * Ahora se debe ejecutar el script SQL completo manualmente
-     */
     private void crearTablasIniciales() {
-        System.out.println("IMPORTANTE: haber ejecutado el script SQL completo");
+        System.out.println("⚠️  IMPORTANTE: Asegúrate de haber ejecutado el script SQL completo");
         System.out.println("    El nuevo esquema usa herencia de tablas");
-        System.out.println("    Ejecuta: script_mediateca_herencia.sql");
+        System.out.println("    Ejecuta: script_mediateca.sql");
     }
 
-    /**
-     * Cierra la conexión a la base de datos
-     */
     public void closeConnection() {
         try {
             if (connection != null && !connection.isClosed()) {
@@ -101,9 +98,6 @@ public class DatabaseConnection {
         }
     }
 
-    /**
-     * Ejecuta una consulta de prueba para verificar la conexión
-     */
     public boolean testConnection() {
         try {
             Connection conn = getConnection();
@@ -117,9 +111,6 @@ public class DatabaseConnection {
         }
     }
 
-    /**
-     * Método auxiliar para cerrar recursos JDBC
-     */
     public static void cerrarRecursos(ResultSet rs, PreparedStatement ps) {
         try {
             if (rs != null) rs.close();
@@ -133,9 +124,6 @@ public class DatabaseConnection {
         }
     }
 
-    /**
-     * Método auxiliar para cerrar Statement
-     */
     public static void cerrarStatement(Statement stmt) {
         try {
             if (stmt != null) stmt.close();
