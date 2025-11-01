@@ -1,198 +1,146 @@
 package com.diego.mediateca.db;
 
-import com.diego.mediateca.domain.*;
-
 import java.sql.*;
-import java.util.Optional;
 
+/**
+ * Clase para gestionar la conexión a la base de datos MySQL
+ */
 public class DatabaseConnection {
-
-    private static final org.apache.logging.log4j.Logger log =
-            org.apache.logging.log4j.LogManager.getLogger(DatabaseConnection.class);
-
+    
     private static DatabaseConnection instance;
     private Connection connection;
 
-    private static final String DB_DRIVER   = "com.mysql.cj.jdbc.Driver";
-    private static final String DB_URL      = "jdbc:mysql://localhost:3306/mediateca_db";
-    private static final String DB_USER     = "user";
-    private static final String DB_PASSWORD = "tu_contrasenia";
-
     private DatabaseConnection() {
         try {
-            log.debug("Cargando driver: {}", DB_DRIVER);
-            Class.forName(DB_DRIVER);
-            long t0 = System.nanoTime();
-            this.connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-            long ms = (System.nanoTime() - t0) / 1_000_000;
-            log.info("Conexión a BD abierta en {} ms | url={} | user={}", ms, DB_URL, DB_USER);
+            // Cargar el driver de MySQL
+            Class.forName(DatabaseConfig.DB_DRIVER);
+            
+            // Establecer conexión
+            this.connection = DriverManager.getConnection(
+                DatabaseConfig.DB_URL,
+                DatabaseConfig.DB_USER,
+                DatabaseConfig.DB_PASSWORD
+            );
+            
+            System.out.println("✓ Conexión a base de datos establecida exitosamente");
+            
+            // Crear las tablas si no existen
+            crearTablasIniciales();
+            
         } catch (ClassNotFoundException e) {
-            log.error("Driver JDBC no encontrado: {}", DB_DRIVER, e);
             throw new RuntimeException("Error: Driver de MySQL no encontrado", e);
         } catch (SQLException e) {
-            log.error("Error al conectar con la base de datos (url={}, user={})", DB_URL, DB_USER, e);
             throw new RuntimeException("Error al conectar con la base de datos: " + e.getMessage(), e);
         }
     }
 
-    public static synchronized DatabaseConnection getInstance() {
-        if (instance == null) {
+    /**
+     * Obtiene la instancia única de DatabaseConnection (Patrón Singleton)
+     */
+    public static DatabaseConnection getInstance() {
+        if (instance == null || !isConnectionValid()) {
             instance = new DatabaseConnection();
         }
         return instance;
     }
 
+    /**
+     * Obtiene la conexión a la base de datos
+     */
     public Connection getConnection() {
         try {
-            if (connection == null || connection.isClosed() || !connection.isValid(2)) {
-                log.warn("Conexión inválida o cerrada. Reabriendo conexión...");
-                connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            if (connection == null || connection.isClosed()) {
+                // Reconectar si la conexión está cerrada
+                connection = DriverManager.getConnection(
+                    DatabaseConfig.DB_URL,
+                    DatabaseConfig.DB_USER,
+                    DatabaseConfig.DB_PASSWORD
+                );
             }
         } catch (SQLException e) {
-            log.error("Error al obtener conexión (reconectar)", e);
             throw new RuntimeException("Error al obtener conexión: " + e.getMessage(), e);
         }
         return connection;
     }
 
-    // ===== Métodos auxiliares que usa AppPrincipal =====
-
-    public Optional<Material> buscarPorId(String id) {
-        String tipo = id.substring(0, 3);
-        String sql;
-        switch (tipo) {
-            case "LIB": sql = "SELECT * FROM libros WHERE id_interno = ?";   break;
-            case "REV": sql = "SELECT * FROM revistas WHERE id_interno = ?"; break;
-            case "DVD": sql = "SELECT * FROM dvds WHERE id_interno = ?";     break;
-            case "CDA": sql = "SELECT * FROM cds WHERE id_interno = ?";      break;
-            default:    return Optional.empty();
-        }
-
-        log.debug("buscarPorId SQL: {} | id={}", sql, id);
-        try (var conn = getConnection();
-             var stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, id);
-            var rs = stmt.executeQuery();
-            if (rs.next()) {
-                Material m = crearMaterialDesdeResultSet(rs, tipo);
-                log.info("buscarPorId OK (id={}, tipo={})", id, tipo);
-                return Optional.ofNullable(m);
-            }
-        } catch (Exception e) {
-            log.error("Error buscando material (id={})", id, e);
-        }
-        return Optional.empty();
-    }
-
-    public void modificarUnidadesLibro(String id, int nuevasUnidades) {
-        final String sql = "UPDATE libros SET unidades_disponibles = ? WHERE id_interno = ?";
-        log.debug("SQL: {} | id={} | unidades={}", sql, id, nuevasUnidades);
-        try (var conn = getConnection();
-             var stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, nuevasUnidades);
-            stmt.setString(2, id);
-            int filas = stmt.executeUpdate();
-            log.info("Unidades de libro actualizadas (id={}, filas={})", id, filas);
-        } catch (Exception e) {
-            log.error("Error al actualizar unidades del libro (id={})", id, e);
-            throw new RuntimeException("Error al actualizar unidades del libro: " + e.getMessage(), e);
-        }
-    }
-
-    public void modificarUnidadesRevista(String id, int nuevasUnidades) {
-        final String sql = "UPDATE revistas SET unidades_disponibles = ? WHERE id_interno = ?";
-        log.debug("SQL: {} | id={} | unidades={}", sql, id, nuevasUnidades);
-        try (var conn = getConnection();
-             var stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, nuevasUnidades);
-            stmt.setString(2, id);
-            int filas = stmt.executeUpdate();
-            log.info("Unidades de revista actualizadas (id={}, filas={})", id, filas);
-        } catch (Exception e) {
-            log.error("Error al actualizar unidades de revista (id={})", id, e);
-            throw new RuntimeException("Error al actualizar unidades de revista: " + e.getMessage(), e);
-        }
-    }
-
-    private Material crearMaterialDesdeResultSet(ResultSet rs, String tipo) throws Exception {
-        switch (tipo) {
-            case "LIB":
-                return new Libro(
-                        rs.getString("id_interno"),
-                        rs.getString("titulo"),
-                        rs.getInt("unidades_disponibles"),
-                        rs.getString("autor"),
-                        rs.getString("editorial"),
-                        rs.getString("isbn"),
-                        rs.getInt("numero_paginas"),
-                        rs.getInt("anio_publicacion")
-                );
-            case "REV":
-                return new Revista(
-                        rs.getString("id_interno"),
-                        rs.getString("titulo"),
-                        rs.getInt("unidades_disponibles"),
-                        rs.getString("editorial"),
-                        rs.getString("periodicidad"),
-                        rs.getDate("fecha_publicacion").toLocalDate()
-                );
-            case "DVD":
-                return new DVD(
-                        rs.getString("id_interno"),
-                        rs.getString("titulo"),
-                        rs.getInt("unidades_disponibles"),
-                        rs.getString("director"),
-                        rs.getString("duracion"),
-                        rs.getString("genero")
-                );
-            case "CDA":
-                return new CD(
-                        rs.getString("id_interno"),
-                        rs.getString("titulo"),
-                        rs.getInt("unidades_disponibles"),
-                        rs.getString("artista"),
-                        rs.getString("genero"),
-                        rs.getString("duracion"),
-                        rs.getInt("numero_canciones")
-                );
-            default:
-                return null;
-        }
-    }
-
-    // ===== Utilidades de conexión =====
-
-    public boolean isConnectionValid() {
+    /**
+     * Verifica si la conexión es válida
+     */
+    private static boolean isConnectionValid() {
         try {
-            boolean ok = connection != null && !connection.isClosed() && connection.isValid(2);
-            log.debug("isConnectionValid -> {}", ok);
-            return ok;
+            return instance != null && 
+                   instance.connection != null && 
+                   !instance.connection.isClosed() &&
+                   instance.connection.isValid(2);
         } catch (SQLException e) {
-            log.error("Error en isConnectionValid()", e);
             return false;
         }
     }
 
+    /**
+     * NOTA: Las tablas ya no se crean aquí automáticamente
+     * Ahora se debe ejecutar el script SQL completo manualmente
+     */
+    private void crearTablasIniciales() {
+        System.out.println("IMPORTANTE: haber ejecutado el script SQL completo");
+        System.out.println("    El nuevo esquema usa herencia de tablas");
+        System.out.println("    Ejecuta: script_mediateca_herencia.sql");
+    }
+
+    /**
+     * Cierra la conexión a la base de datos
+     */
     public void closeConnection() {
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
-                log.info("Conexión cerrada correctamente");
+                System.out.println("✓ Conexión cerrada correctamente");
             }
         } catch (SQLException e) {
-            log.error("Error al cerrar conexión", e);
+            System.err.println("Error al cerrar conexión: " + e.getMessage());
         }
     }
 
+    /**
+     * Ejecuta una consulta de prueba para verificar la conexión
+     */
     public boolean testConnection() {
         try {
             Connection conn = getConnection();
-            DatabaseMetaData meta = conn.getMetaData();
-            log.info("Conectado a {} v{}", meta.getDatabaseProductName(), meta.getDatabaseProductVersion());
+            DatabaseMetaData metaData = conn.getMetaData();
+            System.out.println("Conectado a: " + metaData.getDatabaseProductName() + 
+                             " versión " + metaData.getDatabaseProductVersion());
             return true;
         } catch (SQLException e) {
-            log.error("Error en test de conexión", e);
+            System.err.println("Error en test de conexión: " + e.getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Método auxiliar para cerrar recursos JDBC
+     */
+    public static void cerrarRecursos(ResultSet rs, PreparedStatement ps) {
+        try {
+            if (rs != null) rs.close();
+        } catch (SQLException e) {
+            System.err.println("Error al cerrar ResultSet: " + e.getMessage());
+        }
+        try {
+            if (ps != null) ps.close();
+        } catch (SQLException e) {
+            System.err.println("Error al cerrar PreparedStatement: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Método auxiliar para cerrar Statement
+     */
+    public static void cerrarStatement(Statement stmt) {
+        try {
+            if (stmt != null) stmt.close();
+        } catch (SQLException e) {
+            System.err.println("Error al cerrar Statement: " + e.getMessage());
         }
     }
 }
