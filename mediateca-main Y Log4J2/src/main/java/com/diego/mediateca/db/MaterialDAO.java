@@ -1,325 +1,400 @@
 package com.diego.mediateca.db;
 
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Optional;
-import java.util.List;
+import com.diego.mediateca.domain.*;
+import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
-
-import com.diego.mediateca.domain.CD;
-import com.diego.mediateca.domain.DVD;
-import com.diego.mediateca.domain.Libro;
-import com.diego.mediateca.domain.Material;
-import com.diego.mediateca.domain.Revista;
+import java.util.List;
+import java.util.Optional;
 
 /**
- * DAO para operaciones CRUD de materiales
+ * MaterialDAO actualizado para trabajar con la nueva estructura de BD
+ * que refleja la herencia: Material -> MaterialEscrito/MaterialAudiovisual -> Libros/Revistas/CDs/DVDs
  */
 public class MaterialDAO {
-
+    
     private final DatabaseConnection dbConnection;
 
     public MaterialDAO() {
         this.dbConnection = DatabaseConnection.getInstance();
     }
 
-    // MODIFICACIÓN
+    // MÉTODOS DE MODIFICACIÓN ACTUALIZADOS 
+    
+    /**
+     * Modifica un CD 
+     */
+    public boolean modificarCD(String idInterno, String artista, String genero, 
+                               int numeroCanciones, int unidadesDisponibles) throws SQLException {
+        Connection conn = dbConnection.getConnection();
+        
+        try {
+            conn.setAutoCommit(false); // Iniciar transacción
+            
+            // 1. Actualizar tabla Material (campos comunes)
+            String sqlMaterial = "UPDATE Material SET unidades_disponibles = ? WHERE id_interno = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sqlMaterial)) {
+                ps.setInt(1, unidadesDisponibles);
+                ps.setString(2, idInterno);
+                ps.executeUpdate();
+            }
+            
+            // 2. Actualizar tabla cds (campos específicos)
+            String sqlCD = "UPDATE cds SET artista = ?, numero_canciones = ? WHERE id_interno = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sqlCD)) {
+                ps.setString(1, artista);
+                ps.setInt(2, numeroCanciones);
+                ps.setString(3, idInterno);
+                
+                int filasAfectadas = ps.executeUpdate();
+                
+                conn.commit(); // Confirmar transacción
+                return filasAfectadas > 0;
+            }
+            
+        } catch (SQLException e) {
+            conn.rollback(); // Revertir si hay error
+            throw e;
+        } finally {
+            conn.setAutoCommit(true);
+        }
+    }
+
+    /**
+     * Modifica un DVD
+     */
+    public boolean modificarDVD(String idInterno, String director, 
+                                int unidadesDisponibles) throws SQLException {
+        Connection conn = dbConnection.getConnection();
+        
+        try {
+            conn.setAutoCommit(false);
+            
+            // 1. Actualizar Material
+            String sqlMaterial = "UPDATE Material SET unidades_disponibles = ? WHERE id_interno = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sqlMaterial)) {
+                ps.setInt(1, unidadesDisponibles);
+                ps.setString(2, idInterno);
+                ps.executeUpdate();
+            }
+            
+            // 2. Actualizar dvds
+            String sqlDVD = "UPDATE dvds SET director = ? WHERE id_interno = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sqlDVD)) {
+                ps.setString(1, director);
+                ps.setString(2, idInterno);
+                
+                int filasAfectadas = ps.executeUpdate();
+                
+                conn.commit();
+                return filasAfectadas > 0;
+            }
+            
+        } catch (SQLException e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.setAutoCommit(true);
+        }
+    }
+
+    /**
+     * Modifica un Libro 
+     */
     public boolean modificarLibro(String idInterno, int unidadesDisponibles) throws SQLException {
-        String sql = "UPDATE libros SET unidades_disponibles = ? WHERE id_interno = ?";
+        // Los libros solo pueden modificar unidades (campos son final)
+        String sql = "UPDATE Material SET unidades_disponibles = ? WHERE id_interno = ?";
+        
         try (PreparedStatement ps = dbConnection.getConnection().prepareStatement(sql)) {
             ps.setInt(1, unidadesDisponibles);
             ps.setString(2, idInterno);
-            return ps.executeUpdate() > 0;
+            
+            int filasAfectadas = ps.executeUpdate();
+            return filasAfectadas > 0;
         }
     }
 
+    /**
+     * Modifica una Revista 
+     */
     public boolean modificarRevista(String idInterno, int unidadesDisponibles) throws SQLException {
-        String sql = "UPDATE revistas SET unidades_disponibles = ? WHERE id_interno = ?";
+        String sql = "UPDATE Material SET unidades_disponibles = ? WHERE id_interno = ?";
+        
         try (PreparedStatement ps = dbConnection.getConnection().prepareStatement(sql)) {
             ps.setInt(1, unidadesDisponibles);
             ps.setString(2, idInterno);
-            return ps.executeUpdate() > 0;
+            
+            int filasAfectadas = ps.executeUpdate();
+            return filasAfectadas > 0;
         }
     }
 
-    public boolean modificarDVD(String idInterno, String director, String duracion,
-                                String genero, int unidadesDisponibles) throws SQLException {
-        String sql = "UPDATE dvds SET " +
-                "director = ?, duracion = ?, genero = ?, unidades_disponibles = ? " +
-                "WHERE id_interno = ?";
-        try (PreparedStatement ps = dbConnection.getConnection().prepareStatement(sql)) {
-            ps.setString(1, director);
-            ps.setString(2, duracion);
-            ps.setString(3, genero);
-            ps.setInt(4, unidadesDisponibles);
-            ps.setString(5, idInterno);
-            return ps.executeUpdate() > 0;
-        }
-    }
-
-    public boolean modificarCD(String idInterno, String artista, String genero,
-                               String duracion, int numeroCanciones, int unidadesDisponibles)
-            throws SQLException {
-        String sql = "UPDATE cds SET " +
-                "artista = ?, genero = ?, duracion = ?, numero_canciones = ?, unidades_disponibles = ? " +
-                "WHERE id_interno = ?";
-        try (PreparedStatement ps = dbConnection.getConnection().prepareStatement(sql)) {
-            ps.setString(1, artista);
-            ps.setString(2, genero);
-            ps.setString(3, duracion);
-            ps.setInt(4, numeroCanciones);
-            ps.setInt(5, unidadesDisponibles);
-            ps.setString(6, idInterno);
-            return ps.executeUpdate() > 0;
-        }
-    }
-
-    // INSERCIÓN
+    // MÉTODOS DE INSERCIÓN ACTUALIZADOS 
+    
+    /**
+     * Inserta un Libro
+     */
     public boolean insertarLibro(Libro libro) throws SQLException {
-        String sql = "INSERT INTO libros " +
-                "(id_interno, titulo, unidades_disponibles, autor, editorial, isbn, numero_paginas, anio_publicacion) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = dbConnection.getConnection().prepareStatement(sql)) {
-            ps.setString(1, libro.getIdInterno());
-            ps.setString(2, libro.getTitulo());
-            ps.setInt(3, libro.getUnidadesDisponibles());
-            ps.setString(4, libro.getAutor());
-            ps.setString(5, libro.getEditorial());
-            ps.setString(6, libro.getIsbn());
-            ps.setInt(7, libro.getNumeroPaginas());
-            ps.setInt(8, libro.getAnioPublicacion());
-            return ps.executeUpdate() > 0;
+        Connection conn = dbConnection.getConnection();
+        
+        try {
+            conn.setAutoCommit(false);
+            
+            // 1. Insertar en Material
+            String sqlMaterial = "INSERT INTO Material (id_interno, titulo, unidades_disponibles) VALUES (?, ?, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(sqlMaterial)) {
+                ps.setString(1, libro.getIdInterno());
+                ps.setString(2, libro.getTitulo());
+                ps.setInt(3, libro.getUnidadesDisponibles());
+                ps.executeUpdate();
+            }
+            
+            // 2. Insertar en MaterialEscrito
+            String sqlEscrito = "INSERT INTO MaterialEscrito (id_interno, editorial) VALUES (?, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(sqlEscrito)) {
+                ps.setString(1, libro.getIdInterno());
+                ps.setString(2, libro.getEditorial());
+                ps.executeUpdate();
+            }
+            
+            // 3. Insertar en libros
+            String sqlLibro = "INSERT INTO libros (id_interno, autor, numero_paginas, anio_publicacion) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(sqlLibro)) {
+                ps.setString(1, libro.getIdInterno());
+                ps.setString(2, libro.getAutor());
+                ps.setInt(3, libro.getNumeroPaginas());
+                ps.setInt(4, libro.getAnioPublicacion());
+                
+                int filasAfectadas = ps.executeUpdate();
+                conn.commit();
+                return filasAfectadas > 0;
+            }
+            
+        } catch (SQLException e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.setAutoCommit(true);
         }
     }
 
+    /**
+     * Inserta una Revista
+     */
     public boolean insertarRevista(Revista revista) throws SQLException {
-        String sql = "INSERT INTO revistas " +
-                "(id_interno, titulo, unidades_disponibles, editorial, periodicidad, fecha_publicacion) " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = dbConnection.getConnection().prepareStatement(sql)) {
-            ps.setString(1, revista.getIdInterno());
-            ps.setString(2, revista.getTitulo());
-            ps.setInt(3, revista.getUnidadesDisponibles());
-            ps.setString(4, revista.getEditorial());
-            ps.setString(5, revista.getPeriodicidad());
-            ps.setDate(6, Date.valueOf(revista.getFechaPublicacion()));
-            return ps.executeUpdate() > 0;
+        Connection conn = dbConnection.getConnection();
+        
+        try {
+            conn.setAutoCommit(false);
+            
+            // 1. Material
+            String sqlMaterial = "INSERT INTO Material (id_interno, titulo, unidades_disponibles) VALUES (?, ?, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(sqlMaterial)) {
+                ps.setString(1, revista.getIdInterno());
+                ps.setString(2, revista.getTitulo());
+                ps.setInt(3, revista.getUnidadesDisponibles());
+                ps.executeUpdate();
+            }
+            
+            // 2. MaterialEscrito
+            String sqlEscrito = "INSERT INTO MaterialEscrito (id_interno, editorial) VALUES (?, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(sqlEscrito)) {
+                ps.setString(1, revista.getIdInterno());
+                ps.setString(2, revista.getEditorial());
+                ps.executeUpdate();
+            }
+            
+            // 3. revistas
+            String sqlRevista = "INSERT INTO revistas (id_interno, fecha_publicacion, periodicidad) VALUES (?, ?, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(sqlRevista)) {
+                ps.setString(1, revista.getIdInterno());
+                ps.setDate(2, Date.valueOf(revista.getFechaPublicacion()));
+                ps.setString(3, revista.getPeriodicidad());
+                
+                int filasAfectadas = ps.executeUpdate();
+                conn.commit();
+                return filasAfectadas > 0;
+            }
+            
+        } catch (SQLException e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.setAutoCommit(true);
         }
     }
 
+    /**
+     * Inserta un CD
+     */
     public boolean insertarCD(CD cd) throws SQLException {
-        String sql = "INSERT INTO cds " +
-                "(id_interno, titulo, unidades_disponibles, artista, genero, duracion, numero_canciones) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = dbConnection.getConnection().prepareStatement(sql)) {
-            ps.setString(1, cd.getIdInterno());
-            ps.setString(2, cd.getTitulo());
-            ps.setInt(3, cd.getUnidadesDisponibles());
-            ps.setString(4, cd.getArtista());
-            ps.setString(5, cd.getGenero());
-            ps.setString(6, cd.getDuracion());
-            ps.setInt(7, cd.getNumeroCanciones());
-            return ps.executeUpdate() > 0;
+        Connection conn = dbConnection.getConnection();
+        
+        try {
+            conn.setAutoCommit(false);
+            
+            // 1. Material
+            String sqlMaterial = "INSERT INTO Material (id_interno, titulo, unidades_disponibles) VALUES (?, ?, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(sqlMaterial)) {
+                ps.setString(1, cd.getIdInterno());
+                ps.setString(2, cd.getTitulo());
+                ps.setInt(3, cd.getUnidadesDisponibles());
+                ps.executeUpdate();
+            }
+            
+            // 2. MaterialAudiovisual
+            String sqlAudio = "INSERT INTO MaterialAudiovisual (id_interno, duracion) VALUES (?, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(sqlAudio)) {
+                ps.setString(1, cd.getIdInterno());
+                ps.setInt(2, parseDuracionAMinutos(cd.getDuracion()));
+                ps.executeUpdate();
+            }
+            
+            // 3. cds
+            String sqlCD = "INSERT INTO cds (id_interno, artista, numero_canciones) VALUES (?, ?, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(sqlCD)) {
+                ps.setString(1, cd.getIdInterno());
+                ps.setString(2, cd.getArtista());
+                ps.setInt(3, cd.getNumeroCanciones());
+                
+                int filasAfectadas = ps.executeUpdate();
+                conn.commit();
+                return filasAfectadas > 0;
+            }
+            
+        } catch (SQLException e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.setAutoCommit(true);
         }
     }
 
+    /**
+     * Inserta un DVD 
+     */
     public boolean insertarDVD(DVD dvd) throws SQLException {
-        String sql = "INSERT INTO dvds " +
-                "(id_interno, titulo, unidades_disponibles, director, duracion, genero) " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = dbConnection.getConnection().prepareStatement(sql)) {
-            ps.setString(1, dvd.getIdInterno());
-            ps.setString(2, dvd.getTitulo());
-            ps.setInt(3, dvd.getUnidadesDisponibles());
-            ps.setString(4, dvd.getDirector());
-            ps.setString(5, dvd.getDuracion());
-            ps.setString(6, dvd.getGenero());
-            return ps.executeUpdate() > 0;
-        }
-    }
-
-    // LISTAR DISPONIBLES
-    public List<Libro> listarLibrosDisponibles() throws SQLException {
-        List<Libro> lista = new ArrayList<>();
-        String sql = "SELECT * FROM libros WHERE unidades_disponibles > 0";
-        try (var c = dbConnection.getConnection();
-             var ps = c.prepareStatement(sql);
-             var rs = ps.executeQuery()) {
-            while (rs.next()) {
-                lista.add(new Libro(
-                        rs.getString("id_interno"),
-                        rs.getString("titulo"),
-                        rs.getInt("unidades_disponibles"),
-                        rs.getString("autor"),
-                        rs.getString("editorial"),
-                        rs.getString("isbn"),
-                        rs.getInt("numero_paginas"),
-                        rs.getInt("anio_publicacion")
-                ));
+        Connection conn = dbConnection.getConnection();
+        
+        try {
+            conn.setAutoCommit(false);
+            
+            // 1. Material
+            String sqlMaterial = "INSERT INTO Material (id_interno, titulo, unidades_disponibles) VALUES (?, ?, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(sqlMaterial)) {
+                ps.setString(1, dvd.getIdInterno());
+                ps.setString(2, dvd.getTitulo());
+                ps.setInt(3, dvd.getUnidadesDisponibles());
+                ps.executeUpdate();
             }
-        }
-        return lista;
-    }
-
-    public List<Revista> listarRevistasDisponibles() throws SQLException {
-        List<Revista> lista = new ArrayList<>();
-        String sql = "SELECT * FROM revistas WHERE unidades_disponibles > 0";
-        try (var c = dbConnection.getConnection();
-             var ps = c.prepareStatement(sql);
-             var rs = ps.executeQuery()) {
-            while (rs.next()) {
-                lista.add(new Revista(
-                        rs.getString("id_interno"),
-                        rs.getString("titulo"),
-                        rs.getInt("unidades_disponibles"),
-                        rs.getString("editorial"),
-                        rs.getString("periodicidad"),
-                        rs.getDate("fecha_publicacion").toLocalDate()
-                ));
+            
+            // 2. MaterialAudiovisual
+            String sqlAudio = "INSERT INTO MaterialAudiovisual (id_interno, duracion) VALUES (?, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(sqlAudio)) {
+                ps.setString(1, dvd.getIdInterno());
+                ps.setInt(2, parseDuracionAMinutos(dvd.getDuracion()));
+                ps.executeUpdate();
             }
-        }
-        return lista;
-    }
-
-    public List<DVD> listarDVDsDisponibles() throws SQLException {
-        List<DVD> lista = new ArrayList<>();
-        String sql = "SELECT * FROM dvds WHERE unidades_disponibles > 0";
-        try (var c = dbConnection.getConnection();
-             var ps = c.prepareStatement(sql);
-             var rs = ps.executeQuery()) {
-            while (rs.next()) {
-                lista.add(new DVD(
-                        rs.getString("id_interno"),
-                        rs.getString("titulo"),
-                        rs.getInt("unidades_disponibles"),
-                        rs.getString("director"),
-                        rs.getString("duracion"),
-                        rs.getString("genero")
-                ));
+            
+            // 3. dvds
+            String sqlDVD = "INSERT INTO dvds (id_interno, director) VALUES (?, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(sqlDVD)) {
+                ps.setString(1, dvd.getIdInterno());
+                ps.setString(2, dvd.getDirector());
+                
+                int filasAfectadas = ps.executeUpdate();
+                conn.commit();
+                return filasAfectadas > 0;
             }
+            
+        } catch (SQLException e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.setAutoCommit(true);
         }
-        return lista;
     }
 
-    public List<CD> listarCDsDisponibles() throws SQLException {
-        List<CD> lista = new ArrayList<>();
-        String sql = "SELECT * FROM cds WHERE unidades_disponibles > 0";
-        try (var c = dbConnection.getConnection();
-             var ps = c.prepareStatement(sql);
-             var rs = ps.executeQuery()) {
-            while (rs.next()) {
-                lista.add(new CD(
-                        rs.getString("id_interno"),
-                        rs.getString("titulo"),
-                        rs.getInt("unidades_disponibles"),
-                        rs.getString("artista"),
-                        rs.getString("genero"),
-                        rs.getString("duracion"),
-                        rs.getInt("numero_canciones")
-                ));
-            }
-        }
-        return lista;
-    }
-
-    // BÚSQUEDA POR ID
+    //  MÉTODOS DE BÚSQUEDA 
+    
+    /**
+     * Busca cualquier material por ID - ACTUALIZADO con JOINs
+     */
     public Optional<Material> buscarPorId(String idInterno) throws SQLException {
         String tipo = identificarTipo(idInterno);
-        switch (tipo) {
-            case "LIB": return buscarLibro(idInterno);
-            case "REV": return buscarRevista(idInterno);
-            case "CDA": return buscarCD(idInterno);
-            case "DVD": return buscarDVDPorId(idInterno);
-            default:     return Optional.empty();
-        }
+        
+        return switch (tipo) {
+            case "LIB" -> buscarLibro(idInterno);
+            case "REV" -> buscarRevista(idInterno);
+            case "CDA" -> buscarCD(idInterno);
+            case "DVD" -> buscarDVDPorId(idInterno);
+            default -> Optional.empty();
+        };
     }
 
     private Optional<Material> buscarLibro(String idInterno) throws SQLException {
-        String sql = "SELECT * FROM libros WHERE id_interno = ?";
+        String sql = """
+            SELECT m.id_interno, m.titulo, m.unidades_disponibles,
+                   me.editorial, l.autor, l.numero_paginas, l.anio_publicacion
+            FROM Material m
+            JOIN MaterialEscrito me ON m.id_interno = me.id_interno
+            JOIN libros l ON me.id_interno = l.id_interno
+            WHERE m.id_interno = ?
+            """;
+        
         try (PreparedStatement ps = dbConnection.getConnection().prepareStatement(sql)) {
             ps.setString(1, idInterno);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(new Libro(
-                            rs.getString("id_interno"),
-                            rs.getString("titulo"),
-                            rs.getInt("unidades_disponibles"),
-                            rs.getString("autor"),
-                            rs.getString("editorial"),
-                            rs.getString("isbn"),
-                            rs.getInt("numero_paginas"),
-                            rs.getInt("anio_publicacion")
-                    ));
-                }
-            }
-        }
-        return Optional.empty();
-    }
-
-    private Optional<Material> buscarRevista(String idInterno) throws SQLException {
-        String sql = "SELECT * FROM revistas WHERE id_interno = ?";
-        try (PreparedStatement ps = dbConnection.getConnection().prepareStatement(sql)) {
-            ps.setString(1, idInterno);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(new Revista(
-                            rs.getString("id_interno"),
-                            rs.getString("titulo"),
-                            rs.getInt("unidades_disponibles"),
-                            rs.getString("editorial"),
-                            rs.getString("periodicidad"),
-                            rs.getDate("fecha_publicacion").toLocalDate()
-                    ));
-                }
+            ResultSet rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                Libro libro = new Libro(
+                    rs.getString("id_interno"),
+                    rs.getString("titulo"),
+                    rs.getString("autor"),
+                    rs.getInt("numero_paginas"),
+                    rs.getString("editorial"),
+                    "ISBN-PENDIENTE", // Nota: ISBN no está en nueva BD
+                    rs.getInt("anio_publicacion"),
+                    rs.getInt("unidades_disponibles")
+                );
+                return Optional.of(libro);
             }
         }
         return Optional.empty();
     }
 
     private Optional<Material> buscarCD(String idInterno) throws SQLException {
-        String sql = "SELECT * FROM cds WHERE id_interno = ?";
+        String sql = """
+            SELECT m.id_interno, m.titulo, m.unidades_disponibles,
+                   ma.duracion, c.artista, c.numero_canciones
+            FROM Material m
+            JOIN MaterialAudiovisual ma ON m.id_interno = ma.id_interno
+            JOIN cds c ON ma.id_interno = c.id_interno
+            WHERE m.id_interno = ?
+            """;
+        
         try (PreparedStatement ps = dbConnection.getConnection().prepareStatement(sql)) {
             ps.setString(1, idInterno);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(new CD(
-                            rs.getString("id_interno"),
-                            rs.getString("titulo"),
-                            rs.getInt("unidades_disponibles"),
-                            rs.getString("artista"),
-                            rs.getString("genero"),
-                            rs.getString("duracion"),
-                            rs.getInt("numero_canciones")
-                    ));
-                }
+            ResultSet rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                CD cd = new CD(
+                    rs.getString("id_interno"),
+                    rs.getString("titulo"),
+                    rs.getInt("unidades_disponibles"),
+                    rs.getString("artista"),
+                    "Genero-PENDIENTE", // Nota: género no está en nueva BD
+                    formatearDuracion(rs.getInt("duracion")),
+                    rs.getInt("numero_canciones")
+                );
+                return Optional.of(cd);
             }
         }
         return Optional.empty();
     }
 
-    private Optional<Material> buscarDVDPorId(String idInterno) throws SQLException {
-        String sql = "SELECT * FROM dvds WHERE id_interno = ?";
-        try (PreparedStatement ps = dbConnection.getConnection().prepareStatement(sql)) {
-            ps.setString(1, idInterno);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(new DVD(
-                            rs.getString("id_interno"),
-                            rs.getString("titulo"),
-                            rs.getInt("unidades_disponibles"),
-                            rs.getString("director"),
-                            rs.getString("duracion"),
-                            rs.getString("genero")
-                    ));
-                }
-            }
-        }
-        return Optional.empty();
-    }
-
-    // AUXILIARES
+    // ==================== MÉTODOS AUXILIARES ====================
+    
     private String identificarTipo(String idInterno) {
         if (idInterno.startsWith("LIB")) return "LIB";
         if (idInterno.startsWith("REV")) return "REV";
@@ -328,22 +403,27 @@ public class MaterialDAO {
         throw new IllegalArgumentException("Código interno inválido: " + idInterno);
     }
 
-    public boolean existeMaterial(String idInterno) throws SQLException {
-        String tipo = identificarTipo(idInterno);
-        String tabla;
-        switch (tipo) {
-            case "LIB": tabla = "libros"; break;
-            case "REV": tabla = "revistas"; break;
-            case "CDA": tabla = "cds"; break;
-            case "DVD": tabla = "dvds"; break;
-            default: throw new IllegalArgumentException("Tipo desconocido");
+    /**
+     * Convierte duración de formato "HH:MM:SS" a minutos totales
+     */
+    private int parseDuracionAMinutos(String duracion) {
+        String[] partes = duracion.split(":");
+        if (partes.length == 3) {
+            int horas = Integer.parseInt(partes[0]);
+            int minutos = Integer.parseInt(partes[1]);
+            return (horas * 60) + minutos;
+        } else if (partes.length == 2) {
+            return Integer.parseInt(partes[0]);
         }
-        String sql = "SELECT COUNT(*) FROM " + tabla + " WHERE id_interno = ?";
-        try (PreparedStatement ps = dbConnection.getConnection().prepareStatement(sql)) {
-            ps.setString(1, idInterno);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() && rs.getInt(1) > 0;
-            }
-        }
+        return 0;
+    }
+
+    /**
+     * Convierte minutos a formato "HH:MM:SS"
+     */
+    private String formatearDuracion(int minutos) {
+        int horas = minutos / 60;
+        int mins = minutos % 60;
+        return String.format("%02d:%02d:00", horas, mins);
     }
 }
