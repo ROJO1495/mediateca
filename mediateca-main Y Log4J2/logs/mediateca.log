@@ -1,0 +1,8 @@
+2025-10-25 12:55:17.527 DEBUG [AWT-EventQueue-0] c.d.m.d.DatabaseConnection.<init>:27 - Cargando driver: com.mysql.cj.jdbc.Driver  {}
+2025-10-25 12:55:17.529 ERROR [AWT-EventQueue-0] c.d.m.d.DatabaseConnection.<init>:35 - Driver JDBC no encontrado: com.mysql.cj.jdbc.Driver java.lang.ClassNotFoundException: com.mysql.cj.jdbc.Driver
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641) {}
+2025-10-25 13:03:16.488 DEBUG [AWT-EventQueue-0] c.d.m.d.DatabaseConnection.<init>:23 - Cargando driver: com.mysql.cj.jdbc.Driver  {}
+2025-10-25 13:03:16.572 ERROR [AWT-EventQueue-0] c.d.m.d.DatabaseConnection.<init>:33 - Error al conectar con la base de datos (url=jdbc:mysql://localhost:3306/mediateca_db, user=user) com.mysql.cj.jdbc.exceptions.CommunicationsException: Communications link failure
+
+The last packet sent successfully to the server was 0 milliseconds ago. The driver has not received any packets from the server.
+	at com.mysql.cj.jdbc.exceptions.SQLError.createCommunicationsException(SQLError.java:174) {}
