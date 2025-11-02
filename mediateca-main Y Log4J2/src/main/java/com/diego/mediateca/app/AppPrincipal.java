@@ -469,13 +469,13 @@ public class AppPrincipal extends JFrame {
         
         if (dialogo.isConfirmado()) {
             try {
-                String titulo = dialogo.getValor(1);
-                String autor = dialogo.getValor(2);
-                String editorial = dialogo.getValor(3);
-                String isbn = dialogo.getValor(4);
-                int anio = Integer.parseInt(dialogo.getValor(5));
-                int paginas = Integer.parseInt(dialogo.getValor(6));
-                int unidades = Integer.parseInt(dialogo.getValor(7));
+                String titulo = dialogo.getValor(0);
+                String autor = dialogo.getValor(1);
+                String editorial = dialogo.getValor(2);
+                String isbn = dialogo.getValor(3);
+                int anio = Integer.parseInt(dialogo.getValor(4));
+                int paginas = Integer.parseInt(dialogo.getValor(5));
+                int unidades = Integer.parseInt(dialogo.getValor(6));
 
                 String nuevoId = generarNuevoId("LIB");
                 Libro libro = new Libro(nuevoId, titulo, unidades, autor, editorial, isbn, anio, paginas);
@@ -505,11 +505,11 @@ public class AppPrincipal extends JFrame {
         
         if (dialogo.isConfirmado()) {
             try {
-                String titulo = dialogo.getValor(1);
-                String editorial = dialogo.getValor(2);
-                String periodicidad = dialogo.getValor(3);
-                String fechaStr = dialogo.getValor(4);
-                int unidades = Integer.parseInt(dialogo.getValor(5));
+                String titulo = dialogo.getValor(0);
+                String editorial = dialogo.getValor(1);
+                String periodicidad = dialogo.getValor(2);
+                String fechaStr = dialogo.getValor(3);
+                int unidades = Integer.parseInt(dialogo.getValor(4));
 
                 String nuevoId = generarNuevoId("REV");
                 Revista revista = new Revista(nuevoId, titulo, unidades, editorial, periodicidad, LocalDate.parse(fechaStr));
@@ -537,11 +537,11 @@ public class AppPrincipal extends JFrame {
         
         if (dialogo.isConfirmado()) {
             try {
-                String titulo = dialogo.getValor(1);
-                String director = dialogo.getValor(2);
-                String duracion = dialogo.getValor(3);
-                String genero = dialogo.getValor(4);
-                int unidades = Integer.parseInt(dialogo.getValor(5));
+                String titulo = dialogo.getValor(0);
+                String director = dialogo.getValor(1);
+                String duracion = dialogo.getValor(2);
+                String genero = dialogo.getValor(3);
+                int unidades = Integer.parseInt(dialogo.getValor(4));
 
                 String nuevoId = generarNuevoId("DVD");
                 DVD dvd = new DVD(nuevoId, titulo, unidades, director, duracion, genero);
@@ -570,12 +570,12 @@ public class AppPrincipal extends JFrame {
         
         if (dialogo.isConfirmado()) {
             try {
-                String titulo = dialogo.getValor(1);
-                String artista = dialogo.getValor(2);
-                String genero = dialogo.getValor(3);
-                String duracion = dialogo.getValor(4);
-                int num = Integer.parseInt(dialogo.getValor(5));
-                int unidades = Integer.parseInt(dialogo.getValor(6));
+                String titulo = dialogo.getValor(0);
+                String artista = dialogo.getValor(1);
+                String genero = dialogo.getValor(2);
+                String duracion = dialogo.getValor(3);
+                int num = Integer.parseInt(dialogo.getValor(4));
+                int unidades = Integer.parseInt(dialogo.getValor(5));
 
                 String nuevoId = generarNuevoId("CDA");
                 CD cd = new CD(nuevoId, titulo, unidades, artista, genero, duracion, num);
@@ -589,28 +589,24 @@ public class AppPrincipal extends JFrame {
         }
     }
 
-    private void borrarMaterial(String id) {
-        String tipo = id.substring(0, 3);
-        String sql;
-        switch (tipo) {
-            case "LIB": sql = "DELETE FROM libros WHERE id_interno = ?";   break;
-            case "REV": sql = "DELETE FROM revistas WHERE id_interno = ?"; break;
-            case "CDA": sql = "DELETE FROM cds WHERE id_interno = ?";      break;
-            case "DVD": sql = "DELETE FROM dvds WHERE id_interno = ?";     break;
-            default: throw new IllegalArgumentException("ID inválido: " + id);
-        }
+private void borrarMaterial(String id) {
+    final String sql = "DELETE FROM Material WHERE id_interno = ?";
+    try (var conn = dbConnection.getConnection();
+         var ps = conn.prepareStatement(sql)) {
 
-        try (var conn = dbConnection.getConnection();
-             var stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, id);
-            int filas = stmt.executeUpdate();
-            System.out.println("Material borrado. id=" + id + " | filas=" + filas);
-        } catch (Exception e) {
-            System.err.println("Error al borrar material (id=" + id + "): " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Error al borrar material: " + e.getMessage(), e);
+        ps.setString(1, id);
+        int filas = ps.executeUpdate();
+        System.out.println("Borrado en Material id=" + id + " filas=" + filas);
+
+        if (filas == 0) {
+            throw new RuntimeException("No existe material con ID: " + id);
         }
+    } catch (Exception e) {
+        System.err.println("Error al borrar material (id=" + id + "): " + e.getMessage());
+        e.printStackTrace();
+        throw new RuntimeException("Error al borrar material: " + e.getMessage(), e);
     }
+}
 
     private String generarNuevoId(String tipo) {
         String sql;
