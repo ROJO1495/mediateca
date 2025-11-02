@@ -455,7 +455,6 @@ public class AppPrincipal extends JFrame {
     
     private void agregarLibro() {
         String[] etiquetas = {
-            "Código (LIB00000):",
             "Título:",
             "Autor:",
             "Editorial:",
@@ -494,7 +493,6 @@ public class AppPrincipal extends JFrame {
 
     private void agregarRevista() {
         String[] etiquetas = {
-            "Código (REV00000):",
             "Título:",
             "Editorial:",
             "Periodicidad:",
@@ -527,7 +525,6 @@ public class AppPrincipal extends JFrame {
 
     private void agregarDVD() {
         String[] etiquetas = {
-            "Código (DVD00000):",
             "Título:",
             "Director:",
             "Duración (HH:MM):",
@@ -560,7 +557,6 @@ public class AppPrincipal extends JFrame {
 
     private void agregarCD() {
         String[] etiquetas = {
-            "Código (CDA00000):",
             "Título:",
             "Artista:",
             "Género:",
