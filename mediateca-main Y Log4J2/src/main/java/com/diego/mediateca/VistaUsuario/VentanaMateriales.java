@@ -209,13 +209,13 @@ public class VentanaMateriales extends JPanel {
             List<Libro> libros = materialDAO.listarLibrosDisponibles();
             for (Libro libro : libros) {
                 modeloLibros.addRow(new Object[]{
-                    libro.getIdInterno(),
-                    libro.getTitulo(),
-                    libro.getAutor(),
-                    libro.getEditorial(),
-                    "N/A",
-                    libro.getUnidadesDisponibles()
-                });
+                libro.getIdInterno(),
+                libro.getTitulo(),
+                libro.getAutor(),
+                libro.getEditorial(),
+                libro.getAnioPublicacion(),  
+                libro.getUnidadesDisponibles()
+            });
             }
 
             // Cargar revistas

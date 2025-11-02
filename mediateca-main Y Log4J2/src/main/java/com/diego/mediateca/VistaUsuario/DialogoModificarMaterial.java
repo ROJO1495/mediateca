@@ -2,168 +2,335 @@ package com.diego.mediateca.VistaUsuario;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Cursor;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.sql.SQLException;
+import java.time.LocalDate;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
+import com.diego.mediateca.db.MaterialDAO;
+import com.diego.mediateca.domain.CD;
+import com.diego.mediateca.domain.DVD;
+import com.diego.mediateca.domain.Libro;
+import com.diego.mediateca.domain.Material;
+import com.diego.mediateca.domain.Revista;
+import com.diego.mediateca.utils.ValidacionesUtil;
+
 /**
- * Diálogo mejorado para modificar materiales
+ * Diálogo para modificar materiales de la mediateca
  */
 public class DialogoModificarMaterial extends JDialog {
     
-    private JTextField[] campos;
+    private JTextField txtIdInterno;
+    private JButton btnBuscar;
+    private JPanel panelFormulario;
     private JButton btnGuardar, btnCancelar;
-    private boolean confirmado = false;
-    private String[] valores;
+    
+    private MaterialDAO materialDAO;
+    private Material materialActual;
 
-    public DialogoModificarMaterial(JFrame parent, String titulo, String[] etiquetas, String[] valoresActuales) {
-        super(parent, titulo, true);
-        this.campos = new JTextField[etiquetas.length];
-        inicializarComponentes(etiquetas, valoresActuales);
+    public DialogoModificarMaterial(JFrame parent) {
+        super(parent, "Modificar Material", true);
+        this.materialDAO = new MaterialDAO();
+        inicializarComponentes();
     }
 
-    private void inicializarComponentes(String[] etiquetas, String[] valoresActuales) {
-        setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        
-        JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new BorderLayout(15, 15));
-        mainPanel.setBackground(TemaModerno.COLOR_FONDO);
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+    private void inicializarComponentes() {
+        setLayout(new BorderLayout(10, 10));
+        setSize(500, 400);
+        setLocationRelativeTo(getParent());
 
-        // Panel superior - Título
-        JLabel titleLabel = new JLabel(getTitle());
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        titleLabel.setForeground(TemaModerno.COLOR_PRIMARIO);
-        mainPanel.add(titleLabel, BorderLayout.NORTH);
+        // Panel superior - Búsqueda
+        JPanel panelBusqueda = crearPanelBusqueda();
+        add(panelBusqueda, BorderLayout.NORTH);
 
-        // Panel central - Formulario
-        JPanel formPanel = new JPanel();
-        formPanel.setLayout(new GridBagLayout());
-        formPanel.setBackground(TemaModerno.COLOR_FONDO);
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        for (int i = 0; i < etiquetas.length; i++) {
-            // Etiqueta
-            JLabel label = new JLabel(etiquetas[i]);
-            label.setFont(new Font("Arial", Font.PLAIN, 12));
-            label.setForeground(TemaModerno.COLOR_TEXTO);
-            gbc.gridx = 0;
-            gbc.gridy = i;
-            gbc.weightx = 0.25;
-            formPanel.add(label, gbc);
-
-            // Campo de texto
-            campos[i] = new JTextField(25);
-            campos[i].setFont(new Font("Arial", Font.PLAIN, 12));
-            campos[i].setBackground(Color.WHITE);
-            campos[i].setBorder(BorderFactory.createLineBorder(TemaModerno.COLOR_BORDE, 1));
-            campos[i].setPreferredSize(new Dimension(300, 35));
-            
-            // Si es el primer campo (ID), hacerlo no editable
-            if (i == 0) {
-                campos[i].setEditable(false);
-                campos[i].setBackground(new Color(230, 230, 230));
-            }
-            
-            // Cargar valor actual si existe
-            if (valoresActuales != null && i < valoresActuales.length) {
-                campos[i].setText(valoresActuales[i]);
-            }
-            
-            gbc.gridx = 1;
-            gbc.weightx = 0.75;
-            formPanel.add(campos[i], gbc);
-        }
-
-        mainPanel.add(formPanel, BorderLayout.CENTER);
+        // Panel central - Formulario (vacío inicialmente)
+        panelFormulario = new JPanel();
+        panelFormulario.setLayout(new BoxLayout(panelFormulario, BoxLayout.Y_AXIS));
+        panelFormulario.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        add(new JScrollPane(panelFormulario), BorderLayout.CENTER);
 
         // Panel inferior - Botones
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
-        buttonPanel.setBackground(TemaModerno.COLOR_FONDO);
-
-        btnGuardar = new JButton("✓ Guardar Cambios");
-        btnGuardar.setFont(new Font("Arial", Font.BOLD, 13));
-        btnGuardar.setBackground(TemaModerno.COLOR_PRIMARIO);
-        btnGuardar.setForeground(Color.WHITE);
-        btnGuardar.setBorder(BorderFactory.createEmptyBorder(10, 25, 10, 25));
-        btnGuardar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnGuardar.setFocusPainted(false);
-        btnGuardar.addActionListener(e -> guardar());
-
-        btnCancelar = new JButton("✕ Cancelar");
-        btnCancelar.setFont(new Font("Arial", Font.BOLD, 13));
-        btnCancelar.setBackground(TemaModerno.COLOR_ERROR);
-        btnCancelar.setForeground(Color.WHITE);
-        btnCancelar.setBorder(BorderFactory.createEmptyBorder(10, 25, 10, 25));
-        btnCancelar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnCancelar.setFocusPainted(false);
-        btnCancelar.addActionListener(e -> cancelar());
-
-        buttonPanel.add(btnGuardar);
-        buttonPanel.add(btnCancelar);
-
-        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
-
-        add(mainPanel);
-        setSize(550, 100 + (campos.length * 50));
-        setLocationRelativeTo(getParent());
-        setResizable(false);
+        JPanel panelBotones = crearPanelBotones();
+        add(panelBotones, BorderLayout.SOUTH);
     }
 
-    private void guardar() {
-        if (validarCampos()) {
-            valores = new String[campos.length];
-            for (int i = 0; i < campos.length; i++) {
-                valores[i] = campos[i].getText().trim();
+    private JPanel crearPanelBusqueda() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panel.setBorder(BorderFactory.createTitledBorder("Buscar Material"));
+
+        panel.add(new JLabel("ID Interno:"));
+        txtIdInterno = new JTextField(15);
+        panel.add(txtIdInterno);
+
+        btnBuscar = new JButton("🔍 Buscar");
+        btnBuscar.addActionListener(e -> buscarMaterial());
+        panel.add(btnBuscar);
+
+        return panel;
+    }
+
+    private JPanel crearPanelBotones() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+
+        btnGuardar = new JButton("💾 Guardar Cambios");
+        btnGuardar.setEnabled(false);
+        btnGuardar.addActionListener(e -> guardarCambios());
+        panel.add(btnGuardar);
+
+        btnCancelar = new JButton("❌ Cancelar");
+        btnCancelar.addActionListener(e -> dispose());
+        panel.add(btnCancelar);
+
+        return panel;
+    }
+
+    private void buscarMaterial() {
+        try {
+            String idInterno = txtIdInterno.getText().trim().toUpperCase();
+            
+            if (idInterno.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                    "Por favor ingrese un ID interno",
+                    "Advertencia", JOptionPane.WARNING_MESSAGE);
+                return;
             }
-            confirmado = true;
+
+            // Validar formato según tipo
+            ValidacionesUtil.validarTipoCodigo(idInterno);
+
+            // Buscar en base de datos
+            var materialOpt = materialDAO.buscarPorId(idInterno);
+            
+            if (materialOpt.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                    "No se encontró ningún material con ID: " + idInterno,
+                    "No encontrado", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            materialActual = materialOpt.get();
+            mostrarFormulario(materialActual);
+            btnGuardar.setEnabled(true);
+
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this,
+                e.getMessage(),
+                "Error de validación", JOptionPane.ERROR_MESSAGE);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this,
+                "Error al buscar en base de datos: " + e.getMessage(),
+                "Error de BD", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void mostrarFormulario(Material material) {
+        panelFormulario.removeAll();
+
+        if (material instanceof CD) {
+            mostrarFormularioCD((CD) material);
+        } else if (material instanceof DVD) {
+            mostrarFormularioDVD((DVD) material);
+        } else if (material instanceof Libro) {
+            mostrarFormularioLibro((Libro) material);
+        } else if (material instanceof Revista) {
+            mostrarFormularioRevista((Revista) material);
+        }
+
+        panelFormulario.revalidate();
+        panelFormulario.repaint();
+    }
+
+    private void mostrarFormularioCD(CD cd) {
+        panelFormulario.add(crearLabel("Modificar CD de Audio"));
+        panelFormulario.add(Box.createVerticalStrut(10));
+
+        panelFormulario.add(crearCampoTexto("ID:", cd.getIdInterno(), false));
+        panelFormulario.add(crearCampoTexto("Título:", cd.getTitulo(), true, "titulo"));
+        panelFormulario.add(crearCampoTexto("Artista:", cd.getArtista(), true, "artista"));
+        panelFormulario.add(crearCampoTexto("Género:", cd.getGenero(), true, "genero"));
+        panelFormulario.add(crearCampoTexto("Duración:", cd.getDuracion(), true, "duracion"));
+        panelFormulario.add(crearCampoTexto("Nº Canciones:", String.valueOf(cd.getNumeroCanciones()), true, "canciones"));
+        panelFormulario.add(crearCampoTexto("Unidades:", String.valueOf(cd.getUnidadesDisponibles()), true, "unidades"));
+    }
+
+    private void mostrarFormularioDVD(DVD dvd) {
+        panelFormulario.add(crearLabel("Modificar DVD"));
+        panelFormulario.add(Box.createVerticalStrut(10));
+
+        panelFormulario.add(crearCampoTexto("ID:", dvd.getIdInterno(), false));
+        panelFormulario.add(crearCampoTexto("Título:", dvd.getTitulo(), true, "titulo"));
+        panelFormulario.add(crearCampoTexto("Director:", dvd.getDirector(), true, "director"));
+        panelFormulario.add(crearCampoTexto("Duración:", dvd.getDuracion(), true, "duracion"));
+        panelFormulario.add(crearCampoTexto("Género:", dvd.getGenero(), true, "genero"));
+        panelFormulario.add(crearCampoTexto("Unidades:", String.valueOf(dvd.getUnidadesDisponibles()), true, "unidades"));
+    }
+
+    private void mostrarFormularioLibro(Libro libro) {
+    System.out.println("DEBUG - libro.getAnioPublicacion() = " + libro.getAnioPublicacion());
+    System.out.println("DEBUG - libro.getNumeroPaginas() = " + libro.getNumeroPaginas());
+    
+    panelFormulario.add(crearLabel("Modificar Libro"));
+    panelFormulario.add(Box.createVerticalStrut(10));
+    panelFormulario.add(crearCampoTexto("ID:", libro.getIdInterno(), false));
+    panelFormulario.add(crearCampoTexto("Título:", libro.getTitulo(), true, "titulo"));
+    panelFormulario.add(crearCampoTexto("Autor:", libro.getAutor(), true, "autor"));
+    panelFormulario.add(crearCampoTexto("Editorial:", libro.getEditorial(), true, "editorial"));
+    panelFormulario.add(crearCampoTexto("ISBN:", libro.getIsbn(), true, "isbn"));
+    panelFormulario.add(crearCampoTexto("Año:", String.valueOf(libro.getAnioPublicacion()), true, "anio"));
+    panelFormulario.add(crearCampoTexto("Páginas:", String.valueOf(libro.getNumeroPaginas()), true, "paginas"));
+    panelFormulario.add(crearCampoTexto("Unidades:", String.valueOf(libro.getUnidadesDisponibles()), true, "unidades"));
+}
+
+    private void mostrarFormularioRevista(Revista revista) {
+        panelFormulario.add(crearLabel("Modificar Revista"));
+        panelFormulario.add(Box.createVerticalStrut(10));
+
+        panelFormulario.add(crearCampoTexto("ID:", revista.getIdInterno(), false));
+        panelFormulario.add(crearCampoTexto("Título:", revista.getTitulo(), true, "titulo"));
+        panelFormulario.add(crearCampoTexto("Editorial:", revista.getEditorial(), true, "editorial"));
+        panelFormulario.add(crearCampoTexto("Periodicidad:", revista.getPeriodicidad(), true, "periodicidad"));
+        panelFormulario.add(crearCampoTexto("Fecha (YYYY-MM-DD):", revista.getFechaPublicacion().toString(), true, "fecha"));
+        panelFormulario.add(crearCampoTexto("Unidades:", String.valueOf(revista.getUnidadesDisponibles()), true, "unidades"));
+    }
+
+    private JPanel crearCampoTexto(String label, String valor, boolean editable, String nombre) {
+        JPanel panel = new JPanel(new BorderLayout(5, 5));
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        
+        JLabel lbl = new JLabel(label);
+        lbl.setPreferredSize(new Dimension(120, 25));
+        panel.add(lbl, BorderLayout.WEST);
+        
+        JTextField txt = new JTextField(valor);
+        txt.setEditable(editable);
+        txt.setName(nombre);
+        if (!editable) {
+            txt.setBackground(Color.LIGHT_GRAY);
+        }
+        panel.add(txt, BorderLayout.CENTER);
+        
+        return panel;
+    }
+
+    private JPanel crearCampoTexto(String label, String valor, boolean editable) {
+        return crearCampoTexto(label, valor, editable, "");
+    }
+
+    private JLabel crearLabel(String texto) {
+        JLabel lbl = new JLabel(texto);
+        lbl.setFont(new Font("Arial", Font.BOLD, 14));
+        lbl.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return lbl;
+    }
+
+    private void guardarCambios() {
+        try {
+            if (materialActual instanceof CD) {
+                guardarCD();
+            } else if (materialActual instanceof DVD) {
+                guardarDVD();
+            } else if (materialActual instanceof Libro) {
+                guardarLibro();
+            } else if (materialActual instanceof Revista) {
+                guardarRevista();
+            }
+
+            JOptionPane.showMessageDialog(this,
+                "Material modificado exitosamente",
+                "Éxito", JOptionPane.INFORMATION_MESSAGE);
             dispose();
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "Error al guardar: " + e.getMessage(),
+                "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void cancelar() {
-        confirmado = false;
-        dispose();
+    private void guardarCD() throws SQLException {
+        String id = materialActual.getIdInterno();
+        String titulo = obtenerValorCampo("titulo");
+        String artista = obtenerValorCampo("artista");
+        String genero = obtenerValorCampo("genero");
+        String duracion = obtenerValorCampo("duracion");
+        int canciones = ValidacionesUtil.parseEnteroPositivo(obtenerValorCampo("canciones"), "Número de canciones");
+        int unidades = ValidacionesUtil.parseEnteroNoNegativo(obtenerValorCampo("unidades"), "Unidades");
+
+        ValidacionesUtil.validarDuracion(duracion);
+        
+        materialDAO.modificarCD(id, titulo, artista, genero, duracion, canciones, unidades);
     }
 
-    private boolean validarCampos() {
-        // No validar el primer campo (ID) ya que es no editable
-        for (int i = 1; i < campos.length; i++) {
-            if (campos[i].getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(this, 
-                    "Por favor complete todos los campos", 
-                    "Campos vacíos", 
-                    JOptionPane.WARNING_MESSAGE);
-                return false;
+    private void guardarDVD() throws SQLException {
+        String id = materialActual.getIdInterno();
+        String titulo = obtenerValorCampo("titulo");
+        String director = obtenerValorCampo("director");
+        String duracion = obtenerValorCampo("duracion");
+        String genero = obtenerValorCampo("genero");
+        int unidades = ValidacionesUtil.parseEnteroNoNegativo(obtenerValorCampo("unidades"), "Unidades");
+
+        ValidacionesUtil.validarDuracion(duracion);
+        
+        materialDAO.modificarDVD(id, titulo, director, duracion, genero, unidades);
+    }
+
+    private void guardarLibro() throws SQLException {
+    String id = materialActual.getIdInterno();
+    String titulo = obtenerValorCampo("titulo");
+    String autor = obtenerValorCampo("autor");
+    String editorial = obtenerValorCampo("editorial");
+    String isbn = obtenerValorCampo("isbn");
+    int anio = ValidacionesUtil.parseEnteroPositivo(obtenerValorCampo("anio"), "Año de publicación");
+    int paginas = ValidacionesUtil.parseEnteroPositivo(obtenerValorCampo("paginas"), "Número de páginas");
+    int unidades = ValidacionesUtil.parseEnteroNoNegativo(obtenerValorCampo("unidades"), "Unidades");
+    
+    System.out.println("DEBUG: titulo=" + titulo + " | anio=" + anio + " | paginas=" + paginas);
+    
+    materialDAO.modificarLibro(id, titulo, autor, editorial, isbn, anio, paginas, unidades);
+}
+
+    private void guardarRevista() throws SQLException {
+        String id = materialActual.getIdInterno();
+        String titulo = obtenerValorCampo("titulo");
+        String editorial = obtenerValorCampo("editorial");
+        String periodicidad = obtenerValorCampo("periodicidad");
+        String fechaStr = obtenerValorCampo("fecha");
+        int unidades = ValidacionesUtil.parseEnteroNoNegativo(obtenerValorCampo("unidades"), "Unidades");
+        
+        LocalDate fecha = LocalDate.parse(fechaStr);
+        materialDAO.modificarRevista(id, titulo, editorial, periodicidad, fecha, unidades);
+    }
+
+    private String obtenerValorCampo(String nombre) {
+    System.out.println("Buscando campo: " + nombre);
+    for (Component comp : panelFormulario.getComponents()) {
+        if (comp instanceof JPanel) {
+            for (Component subComp : ((JPanel) comp).getComponents()) {
+                if (subComp instanceof JTextField) {
+                    JTextField txt = (JTextField) subComp;
+                    System.out.println("  Encontré JTextField con nombre: '" + txt.getName() + "' valor: '" + txt.getText() + "'");
+                    if (nombre.equals(txt.getName())) {
+                        return txt.getText().trim();
+                    }
+                }
             }
         }
-        return true;
     }
-
-    public boolean isConfirmado() {
-        return confirmado;
-    }
-
-    public String getValor(int indice) {
-        return confirmado && indice < valores.length ? valores[indice] : null;
-    }
-
-    public String[] getValores() {
-        return valores;
-    }
+    System.out.println("  NO ENCONTRADO");
+    return "";
+}
 }
