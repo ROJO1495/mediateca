@@ -15,6 +15,8 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
+import com.diego.mediateca.VistaUsuario.DialogoAgregarMaterial;
+import com.diego.mediateca.VistaUsuario.DialogoModificarMaterial;
 import com.diego.mediateca.VistaUsuario.VentanaMateriales;
 import com.diego.mediateca.db.DatabaseConnection;
 import com.diego.mediateca.db.MaterialDAO;
@@ -25,16 +27,12 @@ import com.diego.mediateca.domain.Material;
 import com.diego.mediateca.domain.Revista;
 
 /**
- * AppPrincipal COMPLETAMENTE CORREGIDO
- * - Constructores con orden correcto
- * - Métodos de modificación con parámetros correctos
- * - Sin Log4j (comentado para evitar errores)
+ * AppPrincipal CON DIÁLOGOS MEJORADOS
+ * - Usa DialogoAgregarMaterial para diálogos profesionales
+ * - Usa VentanaMateriales para tablas modernas
+ * - Interfaz completa mejorada
  */
 public class AppPrincipal extends JFrame {
-    
-    // Logger comentado por si no tienen Log4j configurado
-    // private static final org.apache.logging.log4j.Logger log =
-    //         org.apache.logging.log4j.LogManager.getLogger(AppPrincipal.class);
     
     private final JPanel content = new JPanel(new CardLayout());
     private DatabaseConnection dbConnection;
@@ -88,12 +86,12 @@ public class AppPrincipal extends JFrame {
 
     private void initComponents() {
         setTitle("Mediateca - Sistema de Gestión");
-        setSize(980, 640);
+        setSize(1000, 700);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Inicializar paneles de listas
+        // Inicializar paneles de listas con VentanaMateriales
         inicializarPanelLibros();
         inicializarPanelRevistas();
         inicializarPanelDVDs();
@@ -114,40 +112,43 @@ public class AppPrincipal extends JFrame {
         showCard("LIBROS");
     }
 
+    // ==================== INICIALIZAR PANELES ====================
+    
     private void inicializarPanelLibros() {
-    librosPanel.removeAll();
-    VentanaMateriales ventana = new VentanaMateriales();
-    librosPanel.add(ventana, BorderLayout.CENTER);
-}
+        librosPanel.removeAll();
+        VentanaMateriales ventana = new VentanaMateriales();
+        librosPanel.add(ventana, BorderLayout.CENTER);
+    }
 
-private void inicializarPanelRevistas() {
-    revistasPanel.removeAll();
-    VentanaMateriales ventana = new VentanaMateriales();
-    revistasPanel.add(ventana, BorderLayout.CENTER);
-}
+    private void inicializarPanelRevistas() {
+        revistasPanel.removeAll();
+        VentanaMateriales ventana = new VentanaMateriales();
+        revistasPanel.add(ventana, BorderLayout.CENTER);
+    }
 
-private void inicializarPanelDVDs() {
-    dvdsPanel.removeAll();
-    VentanaMateriales ventana = new VentanaMateriales();
-    dvdsPanel.add(ventana, BorderLayout.CENTER);
-}
+    private void inicializarPanelDVDs() {
+        dvdsPanel.removeAll();
+        VentanaMateriales ventana = new VentanaMateriales();
+        dvdsPanel.add(ventana, BorderLayout.CENTER);
+    }
 
-private void inicializarPanelCDs() {
-    cdsPanel.removeAll();
-    VentanaMateriales ventana = new VentanaMateriales();
-    cdsPanel.add(ventana, BorderLayout.CENTER);
-}
+    private void inicializarPanelCDs() {
+        cdsPanel.removeAll();
+        VentanaMateriales ventana = new VentanaMateriales();
+        cdsPanel.add(ventana, BorderLayout.CENTER);
+    }
 
-
+    // ==================== MENÚ ====================
+    
     private void crearMenu() {
         JMenuBar mb = new JMenuBar();
 
         // MENU Disponibles
         JMenu mDisponibles = new JMenu("Disponibles");
-        JMenuItem itLibros   = new JMenuItem("Libros");
-        JMenuItem itRevistas = new JMenuItem("Revistas");
-        JMenuItem itDVDs     = new JMenuItem("DVDs");
-        JMenuItem itCDs      = new JMenuItem("CDs");
+        JMenuItem itLibros   = new JMenuItem("📚 Libros");
+        JMenuItem itRevistas = new JMenuItem("📰 Revistas");
+        JMenuItem itDVDs     = new JMenuItem("🎬 DVDs");
+        JMenuItem itCDs      = new JMenuItem("🎵 CDs");
 
         itLibros.addActionListener(e -> showCard("LIBROS"));
         itRevistas.addActionListener(e -> showCard("REVISTAS"));
@@ -198,6 +199,8 @@ private void inicializarPanelCDs() {
         setJMenuBar(mb);
     }
 
+    // ==================== ACCIONES DEL MENÚ BD ====================
+    
     private void probarConexionBD() {
         try {
             System.out.println("Probando conexión a BD desde menú");
@@ -283,58 +286,125 @@ private void inicializarPanelCDs() {
                 default        -> { }
             }
             System.out.println("Material agregado correctamente (tipo=" + tipo + ")");
-            JOptionPane.showMessageDialog(this, "Material agregado con éxito a la base de datos.");
             refrescarVistaActual();
         } catch (Exception ex) {
             System.err.println("No se pudo agregar material (tipo=" + tipo + "): " + ex.getMessage());
             ex.printStackTrace();
-            showError("No se pudo agregar: " + ex.getMessage());
         }
     }
 
     private void onModificarMaterial() {
-        String id = input("ID interno del material a modificar:");
-        if (id == null || id.isBlank()) return;
+    String id = input("ID interno del material a modificar:");
+    if (id == null || id.isBlank()) return;
 
-        try {
-            Optional<Material> op = materialDAO.buscarPorId(id);
-            if (op.isEmpty()) {
-                showWarn("No existe material con ID: " + id);
-                return;
-            }
-
-            Material m = op.get();
-            if (m instanceof Libro) {
-                int u = inputInt("Unidades nuevas para LIBRO " + m.getIdInterno() + ":");
-                materialDAO.modificarLibro(id, u);
-            } else if (m instanceof Revista) {
-                int u = inputInt("Unidades nuevas para REVISTA " + m.getIdInterno() + ":");
-                materialDAO.modificarRevista(id, u);
-            } else if (m instanceof DVD) {
-                String director = input("Director:");
-                String dur = input("Duración (hh:mm):");
-                String genero = input("Género:");
-                int u = inputInt("Unidades disponibles:");
-                // ✅ ORDEN CORRECTO: id, director, duracion, genero, unidades
-                materialDAO.modificarDVD(id, director, dur, genero, u);
-            } else if (m instanceof CD) {
-                String artista = input("Artista:");
-                String genero = input("Género:");
-                String dur = input("Duración (hh:mm):");
-                int num = inputInt("Número de canciones:");
-                int u = inputInt("Unidades disponibles:");
-                // ✅ ORDEN CORRECTO: id, artista, genero, duracion, numCanciones, unidades
-                materialDAO.modificarCD(id, artista, genero, dur, num, u);
-            }
-            System.out.println("Material modificado (id=" + id + ")");
-            JOptionPane.showMessageDialog(this, "Material modificado.");
-            refrescarVistaActual();
-        } catch (Exception ex) {
-            System.err.println("No se pudo modificar material (id=" + id + "): " + ex.getMessage());
-            ex.printStackTrace();
-            showError("No se pudo modificar: " + ex.getMessage());
+    try {
+        Optional<Material> op = materialDAO.buscarPorId(id);
+        if (op.isEmpty()) {
+            showWarn("No existe material con ID: " + id);
+            return;
         }
+
+        Material m = op.get();
+        
+        if (m instanceof Libro l) {
+            String[] etiquetas = {"ID:", "Autor:", "Editorial:", "ISBN:", "Año:", "Páginas:", "Unidades:"};
+            String[] valores = {
+                l.getIdInterno(),
+                l.getAutor(),
+                l.getEditorial(),
+                l.getIsbn(),
+                String.valueOf(l.getAnioPublicacion()),
+                String.valueOf(l.getNumeroPaginas()),
+                String.valueOf(l.getUnidadesDisponibles())
+            };
+            
+            DialogoModificarMaterial dialogo = new DialogoModificarMaterial(this, "Modificar Libro", etiquetas, valores);
+            dialogo.setVisible(true);
+            
+            if (dialogo.isConfirmado()) {
+                int unidades = Integer.parseInt(dialogo.getValor(6));
+                materialDAO.modificarLibro(id, unidades);
+                JOptionPane.showMessageDialog(this, "Libro modificado exitosamente!");
+                refrescarVistaActual();
+            }
+        } 
+        else if (m instanceof Revista r) {
+            String[] etiquetas = {"ID:", "Editorial:", "Periodicidad:", "Fecha:", "Unidades:"};
+            String[] valores = {
+                r.getIdInterno(),
+                r.getEditorial(),
+                r.getPeriodicidad(),
+                r.getFechaPublicacion().toString(),
+                String.valueOf(r.getUnidadesDisponibles())
+            };
+            
+            DialogoModificarMaterial dialogo = new DialogoModificarMaterial(this, "Modificar Revista", etiquetas, valores);
+            dialogo.setVisible(true);
+            
+            if (dialogo.isConfirmado()) {
+                int unidades = Integer.parseInt(dialogo.getValor(4));
+                materialDAO.modificarRevista(id, unidades);
+                JOptionPane.showMessageDialog(this, "Revista modificada exitosamente!");
+                refrescarVistaActual();
+            }
+        } 
+        else if (m instanceof DVD d) {
+            String[] etiquetas = {"ID:", "Director:", "Duración:", "Género:", "Unidades:"};
+            String[] valores = {
+                d.getIdInterno(),
+                d.getDirector(),
+                d.getDuracion(),
+                d.getGenero(),
+                String.valueOf(d.getUnidadesDisponibles())
+            };
+            
+            DialogoModificarMaterial dialogo = new DialogoModificarMaterial(this, "Modificar DVD", etiquetas, valores);
+            dialogo.setVisible(true);
+            
+            if (dialogo.isConfirmado()) {
+                String director = dialogo.getValor(1);
+                String duracion = dialogo.getValor(2);
+                String genero = dialogo.getValor(3);
+                int unidades = Integer.parseInt(dialogo.getValor(4));
+                materialDAO.modificarDVD(id, director, duracion, genero, unidades);
+                JOptionPane.showMessageDialog(this, "DVD modificado exitosamente!");
+                refrescarVistaActual();
+            }
+        } 
+        else if (m instanceof CD c) {
+            String[] etiquetas = {"ID:", "Artista:", "Género:", "Duración:", "Canciones:", "Unidades:"};
+            String[] valores = {
+                c.getIdInterno(),
+                c.getArtista(),
+                c.getGenero(),
+                c.getDuracion(),
+                String.valueOf(c.getNumeroCanciones()),
+                String.valueOf(c.getUnidadesDisponibles())
+            };
+            
+            DialogoModificarMaterial dialogo = new DialogoModificarMaterial(this, "Modificar CD", etiquetas, valores);
+            dialogo.setVisible(true);
+            
+            if (dialogo.isConfirmado()) {
+                String artista = dialogo.getValor(1);
+                String genero = dialogo.getValor(2);
+                String duracion = dialogo.getValor(3);
+                int num = Integer.parseInt(dialogo.getValor(4));
+                int unidades = Integer.parseInt(dialogo.getValor(5));
+                materialDAO.modificarCD(id, artista, genero, duracion, num, unidades);
+                JOptionPane.showMessageDialog(this, "CD modificado exitosamente!");
+                refrescarVistaActual();
+            }
+        }
+    } catch (NumberFormatException e) {
+        showError("Por favor ingrese valores numéricos válidos");
+    } catch (Exception ex) {
+        System.err.println("No se pudo modificar material (id=" + id + "): " + ex.getMessage());
+        ex.printStackTrace();
+        showError("No se pudo modificar: " + ex.getMessage());
     }
+}
+
 
     private void onBorrarMaterial() {
         String id = input("ID interno del material a borrar:");
@@ -381,93 +451,145 @@ private void inicializarPanelCDs() {
         }
     }
 
-    // ==================== MÉTODOS DE AGREGAR (CORREGIDOS) ====================
+    // ==================== MÉTODOS DE AGREGAR CON DIÁLOGOS MEJORADOS ====================
     
     private void agregarLibro() {
-        String titulo = input("Título:");
-        String autor = input("Autor:");
-        String editorial = input("Editorial:");
-        String isbn = input("ISBN:");
-        int anio = inputInt("Año de publicación:");
-        int paginas = inputInt("Número de páginas:");
-        int unidades = inputInt("Unidades disponibles:");
-
-        String nuevoId = generarNuevoId("LIB");
+        String[] etiquetas = {
+            "Código (LIB00000):",
+            "Título:",
+            "Autor:",
+            "Editorial:",
+            "ISBN:",
+            "Año de publicación:",
+            "Número de páginas:",
+            "Unidades disponibles:"
+        };
         
-        // ✅ ORDEN CORRECTO: id, titulo, unidades, autor, editorial, isbn, anio, paginas
-        Libro libro = new Libro(nuevoId, titulo, unidades, autor, editorial, isbn, anio, paginas);
-        try {
-            materialDAO.insertarLibro(libro);
-            System.out.println("Libro agregado a BD (id=" + nuevoId + ")");
-        } catch (Exception e) {
-            System.err.println("Error al agregar libro (id=" + nuevoId + "): " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Error al agregar libro: " + e.getMessage(), e);
+        DialogoAgregarMaterial dialogo = new DialogoAgregarMaterial(this, "Agregar Libro", etiquetas);
+        dialogo.setVisible(true);
+        
+        if (dialogo.isConfirmado()) {
+            try {
+                String titulo = dialogo.getValor(1);
+                String autor = dialogo.getValor(2);
+                String editorial = dialogo.getValor(3);
+                String isbn = dialogo.getValor(4);
+                int anio = Integer.parseInt(dialogo.getValor(5));
+                int paginas = Integer.parseInt(dialogo.getValor(6));
+                int unidades = Integer.parseInt(dialogo.getValor(7));
+
+                String nuevoId = generarNuevoId("LIB");
+                Libro libro = new Libro(nuevoId, titulo, unidades, autor, editorial, isbn, anio, paginas);
+                materialDAO.insertarLibro(libro);
+                
+                System.out.println("Libro agregado a BD (id=" + nuevoId + ")");
+                JOptionPane.showMessageDialog(this, "Libro agregado exitosamente!", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            } catch (NumberFormatException e) {
+                showError("Por favor ingrese valores numéricos válidos en los campos correspondientes");
+            } catch (Exception e) {
+                showError("Error al agregar libro: " + e.getMessage());
+            }
         }
     }
 
     private void agregarRevista() {
-        String titulo = input("Título:");
-        String editorial = input("Editorial:");
-        String periodicidad = input("Periodicidad (Mensual/Semanal/etc):");
-        String fechaStr = input("Fecha publicación (YYYY-MM-DD):");
-        int unidades = inputInt("Unidades disponibles:");
-
-        String nuevoId = generarNuevoId("REV");
+        String[] etiquetas = {
+            "Código (REV00000):",
+            "Título:",
+            "Editorial:",
+            "Periodicidad:",
+            "Fecha publicación (YYYY-MM-DD):",
+            "Unidades disponibles:"
+        };
         
-        // ✅ ORDEN CORRECTO: id, titulo, unidades, editorial, periodicidad, fecha
-        Revista revista = new Revista(nuevoId, titulo, unidades, editorial, periodicidad,
-                LocalDate.parse(fechaStr));
-        try {
-            materialDAO.insertarRevista(revista);
-            System.out.println("Revista agregada a BD (id=" + nuevoId + ")");
-        } catch (Exception e) {
-            System.err.println("Error al agregar revista (id=" + nuevoId + "): " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Error al agregar revista: " + e.getMessage(), e);
+        DialogoAgregarMaterial dialogo = new DialogoAgregarMaterial(this, "Agregar Revista", etiquetas);
+        dialogo.setVisible(true);
+        
+        if (dialogo.isConfirmado()) {
+            try {
+                String titulo = dialogo.getValor(1);
+                String editorial = dialogo.getValor(2);
+                String periodicidad = dialogo.getValor(3);
+                String fechaStr = dialogo.getValor(4);
+                int unidades = Integer.parseInt(dialogo.getValor(5));
+
+                String nuevoId = generarNuevoId("REV");
+                Revista revista = new Revista(nuevoId, titulo, unidades, editorial, periodicidad, LocalDate.parse(fechaStr));
+                materialDAO.insertarRevista(revista);
+                
+                System.out.println("Revista agregada a BD (id=" + nuevoId + ")");
+                JOptionPane.showMessageDialog(this, "Revista agregada exitosamente!", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception e) {
+                showError("Error al agregar revista: " + e.getMessage());
+            }
         }
     }
 
     private void agregarDVD() {
-        String titulo = input("Título:");
-        String director = input("Director:");
-        String duracion = input("Duración (hh:mm):");
-        String genero = input("Género:");
-        int unidades = inputInt("Unidades disponibles:");
-
-        String nuevoId = generarNuevoId("DVD");
+        String[] etiquetas = {
+            "Código (DVD00000):",
+            "Título:",
+            "Director:",
+            "Duración (HH:MM):",
+            "Género:",
+            "Unidades disponibles:"
+        };
         
-        // ✅ ORDEN CORRECTO: id, titulo, unidades, director, duracion, genero
-        DVD dvd = new DVD(nuevoId, titulo, unidades, director, duracion, genero);
-        try {
-            materialDAO.insertarDVD(dvd);
-            System.out.println("DVD agregado a BD (id=" + nuevoId + ")");
-        } catch (Exception e) {
-            System.err.println("Error al agregar DVD (id=" + nuevoId + "): " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Error al agregar DVD: " + e.getMessage(), e);
+        DialogoAgregarMaterial dialogo = new DialogoAgregarMaterial(this, "Agregar DVD", etiquetas);
+        dialogo.setVisible(true);
+        
+        if (dialogo.isConfirmado()) {
+            try {
+                String titulo = dialogo.getValor(1);
+                String director = dialogo.getValor(2);
+                String duracion = dialogo.getValor(3);
+                String genero = dialogo.getValor(4);
+                int unidades = Integer.parseInt(dialogo.getValor(5));
+
+                String nuevoId = generarNuevoId("DVD");
+                DVD dvd = new DVD(nuevoId, titulo, unidades, director, duracion, genero);
+                materialDAO.insertarDVD(dvd);
+                
+                System.out.println("DVD agregado a BD (id=" + nuevoId + ")");
+                JOptionPane.showMessageDialog(this, "DVD agregado exitosamente!", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception e) {
+                showError("Error al agregar DVD: " + e.getMessage());
+            }
         }
     }
 
     private void agregarCD() {
-        String titulo = input("Título:");
-        String artista = input("Artista:");
-        String genero = input("Género:");
-        String duracion = input("Duración (hh:mm):");
-        int num = inputInt("Número de canciones:");
-        int unidades = inputInt("Unidades disponibles:");
-
-        String nuevoId = generarNuevoId("CDA");
+        String[] etiquetas = {
+            "Código (CDA00000):",
+            "Título:",
+            "Artista:",
+            "Género:",
+            "Duración (HH:MM):",
+            "Número de canciones:",
+            "Unidades disponibles:"
+        };
         
-        // ✅ ORDEN CORRECTO: id, titulo, unidades, artista, genero, duracion, numCanciones
-        CD cd = new CD(nuevoId, titulo, unidades, artista, genero, duracion, num);
-        try {
-            materialDAO.insertarCD(cd);
-            System.out.println("CD agregado a BD (id=" + nuevoId + ")");
-        } catch (Exception e) {
-            System.err.println("Error al agregar CD (id=" + nuevoId + "): " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Error al agregar CD: " + e.getMessage(), e);
+        DialogoAgregarMaterial dialogo = new DialogoAgregarMaterial(this, "Agregar CD", etiquetas);
+        dialogo.setVisible(true);
+        
+        if (dialogo.isConfirmado()) {
+            try {
+                String titulo = dialogo.getValor(1);
+                String artista = dialogo.getValor(2);
+                String genero = dialogo.getValor(3);
+                String duracion = dialogo.getValor(4);
+                int num = Integer.parseInt(dialogo.getValor(5));
+                int unidades = Integer.parseInt(dialogo.getValor(6));
+
+                String nuevoId = generarNuevoId("CDA");
+                CD cd = new CD(nuevoId, titulo, unidades, artista, genero, duracion, num);
+                materialDAO.insertarCD(cd);
+                
+                System.out.println("CD agregado a BD (id=" + nuevoId + ")");
+                JOptionPane.showMessageDialog(this, "CD agregado exitosamente!", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception e) {
+                showError("Error al agregar CD: " + e.getMessage());
+            }
         }
     }
 
@@ -554,7 +676,7 @@ private void inicializarPanelCDs() {
                 if (comp == cdsPanel)      return "CDS";
             }
         }
-        return "LIBROS"; // default
+        return "LIBROS";
     }
 
     private static String input(String msg) {

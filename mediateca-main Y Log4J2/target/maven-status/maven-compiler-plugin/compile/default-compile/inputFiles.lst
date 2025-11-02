@@ -1,6 +1,7 @@
 C:\Users\jimmy\OneDrive\Desktop\Jimmy\UDB\Mediateca\mediateca\mediateca-main Y Log4J2\src\main\java\com\diego\mediateca\app\AppPrincipal.java
 C:\Users\jimmy\OneDrive\Desktop\Jimmy\UDB\Mediateca\mediateca\mediateca-main Y Log4J2\src\main\java\com\diego\mediateca\repo\MaterialRepository.java
 C:\Users\jimmy\OneDrive\Desktop\Jimmy\UDB\Mediateca\mediateca\mediateca-main Y Log4J2\src\main\java\com\diego\mediateca\db\DatabaseConnection.java
+C:\Users\jimmy\OneDrive\Desktop\Jimmy\UDB\Mediateca\mediateca\mediateca-main Y Log4J2\src\main\java\com\diego\mediateca\VistaUsuario\DialogoAgregarMaterial.java
 C:\Users\jimmy\OneDrive\Desktop\Jimmy\UDB\Mediateca\mediateca\mediateca-main Y Log4J2\src\main\java\com\diego\mediateca\domain\Revista.java
 C:\Users\jimmy\OneDrive\Desktop\Jimmy\UDB\Mediateca\mediateca\mediateca-main Y Log4J2\src\main\java\com\diego\App.java
 C:\Users\jimmy\OneDrive\Desktop\Jimmy\UDB\Mediateca\mediateca\mediateca-main Y Log4J2\src\main\java\com\diego\mediateca\domain\Libro.java
@@ -15,6 +16,7 @@ C:\Users\jimmy\OneDrive\Desktop\Jimmy\UDB\Mediateca\mediateca\mediateca-main Y L
 C:\Users\jimmy\OneDrive\Desktop\Jimmy\UDB\Mediateca\mediateca\mediateca-main Y Log4J2\src\main\java\com\diego\mediateca\db\DatabaseConfig.java
 C:\Users\jimmy\OneDrive\Desktop\Jimmy\UDB\Mediateca\mediateca\mediateca-main Y Log4J2\src\main\java\com\diego\mediateca\VistaUsuario\AgregarCD.java
 C:\Users\jimmy\OneDrive\Desktop\Jimmy\UDB\Mediateca\mediateca\mediateca-main Y Log4J2\src\main\java\com\diego\mediateca\app\SimpleDocs.java
+C:\Users\jimmy\OneDrive\Desktop\Jimmy\UDB\Mediateca\mediateca\mediateca-main Y Log4J2\src\main\java\com\diego\mediateca\VistaUsuario\DialogoModificarMaterial.java
 C:\Users\jimmy\OneDrive\Desktop\Jimmy\UDB\Mediateca\mediateca\mediateca-main Y Log4J2\src\main\java\com\diego\mediateca\app\ListaPanel.java
 C:\Users\jimmy\OneDrive\Desktop\Jimmy\UDB\Mediateca\mediateca\mediateca-main Y Log4J2\src\main\java\com\diego\mediateca\services\CodigoInternoGenerator.java
 C:\Users\jimmy\OneDrive\Desktop\Jimmy\UDB\Mediateca\mediateca\mediateca-main Y Log4J2\src\main\java\com\diego\mediateca\app\MaterialTableModel.java

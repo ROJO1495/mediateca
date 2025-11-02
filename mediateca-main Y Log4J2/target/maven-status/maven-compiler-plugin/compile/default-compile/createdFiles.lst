@@ -4,13 +4,15 @@ com\diego\mediateca\db\MaterialDAO.class
 com\diego\mediateca\VistaUsuario\ModificarMaterialDialog.class
 com\diego\mediateca\VistaUsuario\TemaModerno.class
 com\diego\mediateca\VistaUsuario\VentanaMateriales$3.class
+com\diego\mediateca\VistaUsuario\AgregarRevista.class
 com\diego\mediateca\domain\Libro.class
 com\diego\mediateca\domain\MaterialEscrito.class
 com\diego\mediateca\VistaUsuario\AgregarDVD.class
 com\diego\mediateca\domain\DVD.class
-com\diego\mediateca\VistaUsuario\AgregarDVD$1.class
 com\diego\mediateca\repo\MaterialRepository.class
+com\diego\mediateca\VistaUsuario\DialogoAgregarMaterial.class
 com\diego\mediateca\VistaUsuario\VentanaMateriales.class
+com\diego\mediateca\VistaUsuario\AgregarLibro.class
 com\diego\mediateca\app\AppPrincipal.class
 com\diego\mediateca\utils\ValidacionesUtil.class
 com\diego\mediateca\domain\CD.class
@@ -21,8 +23,8 @@ com\diego\mediateca\db\DatabaseConnection.class
 com\diego\mediateca\VistaUsuario\AgregarCD.class
 com\diego\mediateca\services\CodigoInternoGenerator.class
 com\diego\App.class
+com\diego\mediateca\VistaUsuario\DialogoModificarMaterial.class
 com\diego\mediateca\VistaUsuario\VentanaMateriales$1.class
 com\diego\mediateca\app\MaterialTableModel.class
-com\diego\mediateca\VistaUsuario\AgregarDVD$2.class
 com\diego\mediateca\app\SimpleDocs$1.class
 com\diego\mediateca\domain\Revista.class
