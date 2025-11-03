@@ -316,33 +316,39 @@ public class AppPrincipal extends JFrame {
     }
     
     private void onBorrarMaterial() {
-        String id = JOptionPane.showInputDialog(this, "ID a borrar:");
-        if (id == null || id.isBlank()) return;
-        
-        id = id.trim().toUpperCase();
-        int confirm = JOptionPane.showConfirmDialog(this, "¿Borrar " + id + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
-        if (confirm != JOptionPane.YES_OPTION) return;
-        
-        try {
-            Optional<Material> op = materialDAO.buscarPorId(id);
-            if (op.isEmpty()) {
-                showWarn("No encontrado");
-                return;
-            }
-            
-            String tabla = getTablaPorId(id);
-            String sql = "DELETE FROM " + tabla + " WHERE id_interno = ?";
-            try (var conn = dbConnection.getConnection();
-                 var stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, id);
-                stmt.executeUpdate();
-                JOptionPane.showMessageDialog(this, "Borrado exitosamente");
-                refrescarVistaActual();
-            }
-        } catch (Exception ex) {
-            showError("Error: " + ex.getMessage());
+    String id = JOptionPane.showInputDialog(this, "ID a borrar:");
+    if (id == null || id.isBlank()) return;
+
+    id = id.trim().toUpperCase();
+    int confirm = JOptionPane.showConfirmDialog(this, "¿Borrar " + id + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
+    if (confirm != JOptionPane.YES_OPTION) return;
+
+    try {
+        // Verifica que exista
+        Optional<Material> op = materialDAO.buscarPorId(id);
+        if (op.isEmpty()) {
+            showWarn("No encontrado");
+            return;
         }
+
+        // ¡Borrar desde la tabla base!
+        final String sql = "DELETE FROM Material WHERE id_interno = ?";
+        try (var conn = dbConnection.getConnection();
+             var ps = conn.prepareStatement(sql)) {
+            ps.setString(1, id);
+            int filas = ps.executeUpdate();
+            if (filas == 0) {
+                showWarn("No se pudo borrar (0 filas afectadas).");
+            } else {
+                JOptionPane.showMessageDialog(this, "Borrado exitosamente");
+            }
+        }
+        refrescarVistaActual();
+    } catch (Exception ex) {
+        showError("Error: " + ex.getMessage());
     }
+}
+
     
     private void onBuscarMaterial() {
         String id = JOptionPane.showInputDialog(this, "ID a buscar:");
@@ -360,31 +366,35 @@ public class AppPrincipal extends JFrame {
         }
     }
     
-    private String getTablaPorId(String id) {
+   /*  private String getTablaPorId(String id) {
         if (id.startsWith("LIB")) return "libros";
         if (id.startsWith("REV")) return "revistas";
         if (id.startsWith("DVD")) return "dvds";
         if (id.startsWith("CDA")) return "cds";
         return "material";
-    }
+    }*/
     
     private String generarId(String tipo) {
-        String sql = "SELECT MAX(id_interno) FROM " + getTablaPorId(tipo + "00001") + " WHERE id_interno LIKE '" + tipo + "%'";
-        try (var conn = dbConnection.getConnection();
-             var stmt = conn.createStatement();
-             var rs = stmt.executeQuery(sql)) {
+    // tipo = "LIB" | "REV" | "DVD" | "CDA"
+    final String sql = "SELECT MAX(id_interno) FROM Material WHERE id_interno LIKE ?";
+    try (var conn = dbConnection.getConnection();
+         var ps = conn.prepareStatement(sql)) {
+        ps.setString(1, tipo + "%");
+        try (var rs = ps.executeQuery()) {
             if (rs.next()) {
-                String ultimoId = rs.getString(1);
-                if (ultimoId != null) {
-                    int num = Integer.parseInt(ultimoId.substring(3)) + 1;
-                    return String.format("%s%05d", tipo, num);
+                String ultimo = rs.getString(1); // p.ej. LIB00012
+                if (ultimo != null && !ultimo.isEmpty()) {
+                    int num = Integer.parseInt(ultimo.substring(tipo.length())); // desde después del prefijo
+                    return String.format("%s%05d", tipo, num + 1);
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        return tipo + "00001";
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+    return tipo + "00001";
+}
+
     
     private void showCard(String name) {
         ((CardLayout) content.getLayout()).show(content, name);
