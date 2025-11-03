@@ -1,7 +1,6 @@
 com\diego\mediateca\db\DatabaseConfig.class
 com\diego\mediateca\domain\Material.class
 com\diego\mediateca\db\MaterialDAO.class
-com\diego\mediateca\VistaUsuario\ModificarMaterialDialog.class
 com\diego\mediateca\VistaUsuario\TemaModerno.class
 com\diego\mediateca\VistaUsuario\VentanaMateriales$3.class
 com\diego\mediateca\VistaUsuario\AgregarRevista.class
