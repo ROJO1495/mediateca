@@ -25,3 +25,53 @@
 2025-11-04 21:42:36.408 ERROR [main] c.d.m.ProbarLogs.main:43 - S3) Esperado: fallo por 'Data too long' en ISBN com.mysql.cj.jdbc.exceptions.MysqlDataTruncation: Data truncation: Data too long for column 'isbn' at row 1
 	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:104) {}
 2025-11-04 21:42:36.410 INFO  [main] c.d.m.ProbarLogs.main:46 - Pruebas de logging finalizadas  {}
+2025-11-04 21:43:53.656 DEBUG [AWT-EventQueue-0] c.d.m.d.DatabaseConnection.getInstance:54 - Creando nueva instancia de DatabaseConnection (o la previa no es válida)  {}
+2025-11-04 21:43:53.676 DEBUG [AWT-EventQueue-0] c.d.m.d.DatabaseConnection.<init>:28 - Cargando driver JDBC: com.mysql.cj.jdbc.Driver  {}
+2025-11-04 21:43:53.684 INFO  [AWT-EventQueue-0] c.d.m.d.DatabaseConnection.<init>:31 - Intentando conectar a BD (url=jdbc:mysql://localhost:3306/mediateca_db, user=root)  {}
+2025-11-04 21:43:54.205 INFO  [AWT-EventQueue-0] c.d.m.d.DatabaseConnection.<init>:38 - ✓ Conexión a base de datos establecida exitosamente  {}
+2025-11-04 21:43:54.205 WARN  [AWT-EventQueue-0] c.d.m.d.DatabaseConnection.crearTablasIniciales:105 - IMPORTANTE: asegúrate de haber ejecutado el script SQL del esquema actual (herencia de tablas).  {}
+2025-11-04 21:43:54.205 INFO  [AWT-EventQueue-0] c.d.m.a.AppPrincipal.<init>:50 - Inicializando AppPrincipal  {}
+2025-11-04 21:43:54.205 INFO  [AWT-EventQueue-0] c.d.m.a.AppPrincipal.verificarConexionBD:67 - Verificando conexión a BD...  {}
+2025-11-04 21:43:54.211 INFO  [AWT-EventQueue-0] c.d.m.d.DatabaseConnection.testConnection:123 - Conectado a: MySQL versión 9.5.0 | Driver: MySQL Connector/J  {}
+2025-11-04 21:43:54.214 INFO  [AWT-EventQueue-0] c.d.m.a.AppPrincipal.verificarConexionBD:76 - Aplicación conectada a base de datos correctamente  {}
+2025-11-04 21:43:54.287 DEBUG [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarLibrosDisponibles:484 - listarLibrosDisponibles() ejecutando consulta  {}
+2025-11-04 21:43:54.321 INFO  [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarLibrosDisponibles:503 - listarLibrosDisponibles() resultados=3  {}
+2025-11-04 21:43:54.321 DEBUG [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarRevistasDisponibles:517 - listarRevistasDisponibles() ejecutando consulta  {}
+2025-11-04 21:43:54.326 INFO  [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarRevistasDisponibles:534 - listarRevistasDisponibles() resultados=1  {}
+2025-11-04 21:43:54.327 DEBUG [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarCDsDisponibles:548 - listarCDsDisponibles() ejecutando consulta  {}
+2025-11-04 21:43:54.336 INFO  [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarCDsDisponibles:566 - listarCDsDisponibles() resultados=2  {}
+2025-11-04 21:43:54.336 DEBUG [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarDVDsDisponibles:580 - listarDVDsDisponibles() ejecutando consulta  {}
+2025-11-04 21:43:54.339 INFO  [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarDVDsDisponibles:597 - listarDVDsDisponibles() resultados=2  {}
+2025-11-04 21:43:54.353 DEBUG [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarLibrosDisponibles:484 - listarLibrosDisponibles() ejecutando consulta  {}
+2025-11-04 21:43:54.356 INFO  [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarLibrosDisponibles:503 - listarLibrosDisponibles() resultados=3  {}
+2025-11-04 21:43:54.356 DEBUG [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarRevistasDisponibles:517 - listarRevistasDisponibles() ejecutando consulta  {}
+2025-11-04 21:43:54.359 INFO  [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarRevistasDisponibles:534 - listarRevistasDisponibles() resultados=1  {}
+2025-11-04 21:43:54.359 DEBUG [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarCDsDisponibles:548 - listarCDsDisponibles() ejecutando consulta  {}
+2025-11-04 21:43:54.366 INFO  [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarCDsDisponibles:566 - listarCDsDisponibles() resultados=2  {}
+2025-11-04 21:43:54.366 DEBUG [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarDVDsDisponibles:580 - listarDVDsDisponibles() ejecutando consulta  {}
+2025-11-04 21:43:54.370 INFO  [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarDVDsDisponibles:597 - listarDVDsDisponibles() resultados=2  {}
+2025-11-04 21:43:54.384 DEBUG [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarLibrosDisponibles:484 - listarLibrosDisponibles() ejecutando consulta  {}
+2025-11-04 21:43:54.389 INFO  [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarLibrosDisponibles:503 - listarLibrosDisponibles() resultados=3  {}
+2025-11-04 21:43:54.391 DEBUG [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarRevistasDisponibles:517 - listarRevistasDisponibles() ejecutando consulta  {}
+2025-11-04 21:43:54.393 INFO  [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarRevistasDisponibles:534 - listarRevistasDisponibles() resultados=1  {}
+2025-11-04 21:43:54.393 DEBUG [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarCDsDisponibles:548 - listarCDsDisponibles() ejecutando consulta  {}
+2025-11-04 21:43:54.399 INFO  [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarCDsDisponibles:566 - listarCDsDisponibles() resultados=2  {}
+2025-11-04 21:43:54.401 DEBUG [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarDVDsDisponibles:580 - listarDVDsDisponibles() ejecutando consulta  {}
+2025-11-04 21:43:54.404 INFO  [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarDVDsDisponibles:597 - listarDVDsDisponibles() resultados=2  {}
+2025-11-04 21:43:54.416 DEBUG [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarLibrosDisponibles:484 - listarLibrosDisponibles() ejecutando consulta  {}
+2025-11-04 21:43:54.419 INFO  [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarLibrosDisponibles:503 - listarLibrosDisponibles() resultados=3  {}
+2025-11-04 21:43:54.419 DEBUG [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarRevistasDisponibles:517 - listarRevistasDisponibles() ejecutando consulta  {}
+2025-11-04 21:43:54.421 INFO  [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarRevistasDisponibles:534 - listarRevistasDisponibles() resultados=1  {}
+2025-11-04 21:43:54.424 DEBUG [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarCDsDisponibles:548 - listarCDsDisponibles() ejecutando consulta  {}
+2025-11-04 21:43:54.426 INFO  [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarCDsDisponibles:566 - listarCDsDisponibles() resultados=2  {}
+2025-11-04 21:43:54.426 DEBUG [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarDVDsDisponibles:580 - listarDVDsDisponibles() ejecutando consulta  {}
+2025-11-04 21:43:54.431 INFO  [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarDVDsDisponibles:597 - listarDVDsDisponibles() resultados=2  {}
+2025-11-04 21:43:54.458 DEBUG [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarLibrosDisponibles:484 - listarLibrosDisponibles() ejecutando consulta  {}
+2025-11-04 21:43:54.462 INFO  [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarLibrosDisponibles:503 - listarLibrosDisponibles() resultados=3  {}
+2025-11-04 21:43:54.462 DEBUG [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarRevistasDisponibles:517 - listarRevistasDisponibles() ejecutando consulta  {}
+2025-11-04 21:43:54.467 INFO  [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarRevistasDisponibles:534 - listarRevistasDisponibles() resultados=1  {}
+2025-11-04 21:43:54.467 DEBUG [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarCDsDisponibles:548 - listarCDsDisponibles() ejecutando consulta  {}
+2025-11-04 21:43:54.467 INFO  [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarCDsDisponibles:566 - listarCDsDisponibles() resultados=2  {}
+2025-11-04 21:43:54.467 DEBUG [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarDVDsDisponibles:580 - listarDVDsDisponibles() ejecutando consulta  {}
+2025-11-04 21:43:54.467 INFO  [AWT-EventQueue-0] c.d.m.d.MaterialDAO.listarDVDsDisponibles:597 - listarDVDsDisponibles() resultados=2  {}
+2025-11-04 21:43:54.467 DEBUG [AWT-EventQueue-0] c.d.m.a.AppPrincipal.initComponents:107 - Componentes inicializados, mostrando tarjeta LIBROS  {}
