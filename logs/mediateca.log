@@ -1,0 +1,27 @@
+2025-11-04 21:42:35.836 DEBUG [main] c.d.m.d.DatabaseConnection.getInstance:54 - Creando nueva instancia de DatabaseConnection (o la previa no es válida)  {}
+2025-11-04 21:42:35.849 DEBUG [main] c.d.m.d.DatabaseConnection.<init>:28 - Cargando driver JDBC: com.mysql.cj.jdbc.Driver  {}
+2025-11-04 21:42:35.856 INFO  [main] c.d.m.d.DatabaseConnection.<init>:31 - Intentando conectar a BD (url=jdbc:mysql://localhost:3306/mediateca_db, user=root)  {}
+2025-11-04 21:42:36.306 INFO  [main] c.d.m.d.DatabaseConnection.<init>:38 - ✓ Conexión a base de datos establecida exitosamente  {}
+2025-11-04 21:42:36.314 WARN  [main] c.d.m.d.DatabaseConnection.crearTablasIniciales:105 - IMPORTANTE: asegúrate de haber ejecutado el script SQL del esquema actual (herencia de tablas).  {}
+2025-11-04 21:42:36.316 INFO  [main] c.d.m.ProbarLogs.main:18 - S1) Insertando libro válido con id LIBLOG-56314  {}
+2025-11-04 21:42:36.316 DEBUG [main] c.d.m.d.MaterialDAO.insertarLibro:255 - insertarLibro() id=LIBLOG-56314, titulo=Libro OK, autor=Autor A, anio=2024, paginas=120, unidades=2  {}
+2025-11-04 21:42:36.339 DEBUG [main] c.d.m.d.MaterialDAO.insertarLibro:269 - INSERT Material filas=1  {}
+2025-11-04 21:42:36.344 DEBUG [main] c.d.m.d.MaterialDAO.insertarLibro:277 - INSERT MaterialEscrito filas=1  {}
+2025-11-04 21:42:36.347 DEBUG [main] c.d.m.d.MaterialDAO.insertarLibro:290 - INSERT Libros filas=1  {}
+2025-11-04 21:42:36.347 INFO  [main] c.d.m.d.MaterialDAO.insertarLibro:297 - Libro insertado correctamente id=LIBLOG-56314  {}
+2025-11-04 21:42:36.347 INFO  [main] c.d.m.ProbarLogs.main:22 - S1) OK listo (id=LIBLOG-56314)  {}
+2025-11-04 21:42:36.347 INFO  [main] c.d.m.ProbarLogs.main:25 - S2) Forzando PK duplicada con el MISMO id LIBLOG-56314  {}
+2025-11-04 21:42:36.356 DEBUG [main] c.d.m.d.MaterialDAO.insertarLibro:255 - insertarLibro() id=LIBLOG-56314, titulo=Libro Duplicado, autor=, anio=2024, paginas=100, unidades=1  {}
+2025-11-04 21:42:36.389 ERROR [main] c.d.m.d.MaterialDAO.insertarLibro:302 - Error insertarLibro() id=LIBLOG-56314: Duplicate entry 'LIBLOG-56314' for key 'material.PRIMARY' java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'LIBLOG-56314' for key 'material.PRIMARY'
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:118) {}
+2025-11-04 21:42:36.396 ERROR [main] c.d.m.ProbarLogs.main:31 - S2) Esperado: fallo por PK duplicada (id=LIBLOG-56314) java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'LIBLOG-56314' for key 'material.PRIMARY'
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:118) {}
+2025-11-04 21:42:36.396 INFO  [main] c.d.m.ProbarLogs.main:35 - S3) Forzando 'Data too long' con ISBN larguísimo  {}
+2025-11-04 21:42:36.396 DEBUG [main] c.d.m.d.MaterialDAO.insertarLibro:255 - insertarLibro() id=LIBLONG-56396, titulo=Libro con ISBN larguísimo, autor=Autor B, anio=2025, paginas=90, unidades=1  {}
+2025-11-04 21:42:36.399 DEBUG [main] c.d.m.d.MaterialDAO.insertarLibro:269 - INSERT Material filas=1  {}
+2025-11-04 21:42:36.399 DEBUG [main] c.d.m.d.MaterialDAO.insertarLibro:277 - INSERT MaterialEscrito filas=1  {}
+2025-11-04 21:42:36.399 ERROR [main] c.d.m.d.MaterialDAO.insertarLibro:302 - Error insertarLibro() id=LIBLONG-56396: Data truncation: Data too long for column 'isbn' at row 1 com.mysql.cj.jdbc.exceptions.MysqlDataTruncation: Data truncation: Data too long for column 'isbn' at row 1
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:104) {}
+2025-11-04 21:42:36.408 ERROR [main] c.d.m.ProbarLogs.main:43 - S3) Esperado: fallo por 'Data too long' en ISBN com.mysql.cj.jdbc.exceptions.MysqlDataTruncation: Data truncation: Data too long for column 'isbn' at row 1
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:104) {}
+2025-11-04 21:42:36.410 INFO  [main] c.d.m.ProbarLogs.main:46 - Pruebas de logging finalizadas  {}

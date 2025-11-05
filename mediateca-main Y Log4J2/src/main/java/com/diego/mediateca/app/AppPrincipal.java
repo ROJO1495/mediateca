@@ -26,127 +26,135 @@ import com.diego.mediateca.domain.Libro;
 import com.diego.mediateca.domain.Material;
 import com.diego.mediateca.domain.Revista;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * AppPrincipal - Sistema de Gestión de Mediateca
  * Interfaz profesional con diálogos mejorados
  */
 public class AppPrincipal extends JFrame {
-    
+
+    private static final Logger log = LogManager.getLogger(AppPrincipal.class);
+
     private final JPanel content = new JPanel(new CardLayout());
     private DatabaseConnection dbConnection;
     private final MaterialDAO materialDAO = new MaterialDAO();
-    
+
     private final JPanel librosPanel   = new JPanel(new BorderLayout());
     private final JPanel revistasPanel = new JPanel(new BorderLayout());
     private final JPanel dvdsPanel     = new JPanel(new BorderLayout());
     private final JPanel cdsPanel      = new JPanel(new BorderLayout());
-    
+
     public AppPrincipal() {
-        System.out.println("Inicializando AppPrincipal");
+        log.info("Inicializando AppPrincipal");
         instalarManejadorExcepcionesGlobal();
         verificarConexionBD();
         initComponents();
     }
-    
+
     private void instalarManejadorExcepcionesGlobal() {
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
-            System.err.println("Excepción no manejada en hilo: " + t.getName());
-            e.printStackTrace();
+            log.error("Excepción no manejada en hilo {}", t.getName(), e);
             JOptionPane.showMessageDialog(this,
-                    "Ha ocurrido un error inesperado.",
-                    "Error", JOptionPane.ERROR_MESSAGE);
+                "Ha ocurrido un error inesperado.",
+                "Error", JOptionPane.ERROR_MESSAGE);
         });
     }
-    
+
     private void verificarConexionBD() {
         try {
-            System.out.println("Verificando conexión a BD...");
+            log.info("Verificando conexión a BD...");
             dbConnection = DatabaseConnection.getInstance();
             boolean conexionExitosa = dbConnection.testConnection();
             if (!conexionExitosa) {
-                System.err.println("Fallo de conexión inicial");
+                log.warn("Fallo de conexión inicial a la base de datos");
                 JOptionPane.showMessageDialog(this,
-                        "Error al conectar con la base de datos.\nLa aplicación puede no funcionar correctamente.",
-                        "Error de Conexión", JOptionPane.WARNING_MESSAGE);
+                    "Error al conectar con la base de datos.\nLa aplicación puede no funcionar correctamente.",
+                    "Error de Conexión", JOptionPane.WARNING_MESSAGE);
             } else {
-                System.out.println("✓ Aplicación conectada a base de datos correctamente");
+                log.info("Aplicación conectada a base de datos correctamente");
             }
         } catch (Exception e) {
-            System.err.println("Error crítico de conexión al iniciar la app");
-            e.printStackTrace();
+            log.error("Error crítico de conexión al iniciar la app", e);
             JOptionPane.showMessageDialog(this,
-                    "Error crítico de conexión: " + e.getMessage() + "\nVerifique que MySQL esté ejecutándose.",
-                    "Error de Configuración",
-                    JOptionPane.ERROR_MESSAGE);
+                "Error crítico de conexión: " + e.getMessage() + "\nVerifique que MySQL esté ejecutándose.",
+                "Error de Configuración",
+                JOptionPane.ERROR_MESSAGE);
         }
     }
-    
+
     private void initComponents() {
         setTitle("Mediateca - Sistema de Gestión");
         setSize(1000, 700);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
-        
+
         inicializarPanelLibros();
         inicializarPanelRevistas();
         inicializarPanelDVDs();
         inicializarPanelCDs();
-        
+
         content.add(librosPanel,   "LIBROS");
         content.add(revistasPanel, "REVISTAS");
         content.add(dvdsPanel,     "DVDS");
         content.add(cdsPanel,      "CDS");
         add(content, BorderLayout.CENTER);
-        
+
         crearMenu();
         showCard("LIBROS");
+        log.debug("Componentes inicializados, mostrando tarjeta LIBROS");
     }
-    
+
     private void inicializarPanelLibros() {
         librosPanel.removeAll();
         VentanaMateriales ventana = new VentanaMateriales();
         librosPanel.add(ventana, BorderLayout.CENTER);
+        log.trace("Panel LIBROS inicializado");
     }
-    
+
     private void inicializarPanelRevistas() {
         revistasPanel.removeAll();
         VentanaMateriales ventana = new VentanaMateriales();
         revistasPanel.add(ventana, BorderLayout.CENTER);
+        log.trace("Panel REVISTAS inicializado");
     }
-    
+
     private void inicializarPanelDVDs() {
         dvdsPanel.removeAll();
         VentanaMateriales ventana = new VentanaMateriales();
         dvdsPanel.add(ventana, BorderLayout.CENTER);
+        log.trace("Panel DVDS inicializado");
     }
-    
+
     private void inicializarPanelCDs() {
         cdsPanel.removeAll();
         VentanaMateriales ventana = new VentanaMateriales();
         cdsPanel.add(ventana, BorderLayout.CENTER);
+        log.trace("Panel CDS inicializado");
     }
-    
+
     private void crearMenu() {
         JMenuBar mb = new JMenuBar();
-        
+
         // MENU Disponibles
         JMenu mDisponibles = new JMenu("Disponibles");
         JMenuItem itLibros   = new JMenuItem("📚 Libros");
         JMenuItem itRevistas = new JMenuItem("📰 Revistas");
         JMenuItem itDVDs     = new JMenuItem("🎬 DVDs");
         JMenuItem itCDs      = new JMenuItem("🎵 CDs");
-        
+
         itLibros.addActionListener(e -> showCard("LIBROS"));
         itRevistas.addActionListener(e -> showCard("REVISTAS"));
         itDVDs.addActionListener(e -> showCard("DVDS"));
         itCDs.addActionListener(e -> showCard("CDS"));
-        
+
         mDisponibles.add(itLibros);
         mDisponibles.add(itRevistas);
         mDisponibles.add(itDVDs);
         mDisponibles.add(itCDs);
-        
+
         // Base de Datos
         JMenu mBaseDatos = new JMenu("Base de Datos");
         JMenuItem miTestConexion = new JMenuItem("Probar Conexión");
@@ -155,7 +163,7 @@ public class AppPrincipal extends JFrame {
         miInfoBD.addActionListener(e -> mostrarInfoBD());
         mBaseDatos.add(miTestConexion);
         mBaseDatos.add(miInfoBD);
-        
+
         // MENU OPERACIONES
         JMenu mOps = new JMenu("Operaciones");
         JMenuItem miAgregar   = new JMenuItem("Agregar material…");
@@ -163,48 +171,45 @@ public class AppPrincipal extends JFrame {
         JMenuItem miBorrar    = new JMenuItem("Borrar material…");
         JMenuItem miBuscar    = new JMenuItem("Buscar material…");
         JMenuItem miSalir     = new JMenuItem("Salir");
-        
+
         miAgregar.addActionListener(e -> onAgregarMaterial());
         miModificar.addActionListener(e -> onModificarMaterial());
         miBorrar.addActionListener(e -> onBorrarMaterial());
         miBuscar.addActionListener(e -> onBuscarMaterial());
         miSalir.addActionListener(e -> salirAplicacion());
-        
+
         mOps.add(miAgregar);
         mOps.add(miModificar);
         mOps.add(miBorrar);
         mOps.add(miBuscar);
         mOps.addSeparator();
         mOps.add(miSalir);
-        
+
         mb.add(mDisponibles);
         mb.add(mOps);
         mb.add(mBaseDatos);
         setJMenuBar(mb);
     }
-    
+
     private void probarConexionBD() {
         try {
+            log.debug("Usuario solicitó probar conexión BD");
             DatabaseConnection db = DatabaseConnection.getInstance();
             boolean conexionOk = db.testConnection();
             if (conexionOk) {
-                JOptionPane.showMessageDialog(this,
-                        "✓ Conexión exitosa",
-                        "Éxito",
-                        JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "✓ Conexión exitosa", "Éxito", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                JOptionPane.showMessageDialog(this,
-                        "✗ Conexión fallida",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "✗ Conexión fallida", "Error", JOptionPane.ERROR_MESSAGE);
             }
         } catch (Exception e) {
+            log.error("Error en probarConexionBD()", e);
             showError("Error: " + e.getMessage());
         }
     }
-    
+
     private void mostrarInfoBD() {
         try {
+            log.debug("Usuario solicitó información de BD");
             DatabaseConnection db = DatabaseConnection.getInstance();
             java.sql.Connection conn = db.getConnection();
             java.sql.DatabaseMetaData metaData = conn.getMetaData();
@@ -218,48 +223,53 @@ public class AppPrincipal extends JFrame {
                     metaData.getDriverName());
             JOptionPane.showMessageDialog(this, info, "Información BD", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception e) {
+            log.error("Error al obtener información de BD", e);
             showError("Error: " + e.getMessage());
         }
     }
-    
+
     private void salirAplicacion() {
         try {
+            log.info("Cerrando aplicación por solicitud del usuario");
             DatabaseConnection db = DatabaseConnection.getInstance();
             db.closeConnection();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.warn("Error al cerrar conexión al salir", e);
         } finally {
             dispose();
         }
     }
-    
+
     // ==================== ACCIONES PRINCIPALES ====================
-    
+
     private void onAgregarMaterial() {
         String[] tipos = {"LIBRO", "REVISTA", "DVD", "CD"};
         String tipo = (String) JOptionPane.showInputDialog(
                 this, "Selecciona tipo de material:", "Agregar Material",
                 JOptionPane.QUESTION_MESSAGE, null, tipos, tipos[0]);
         if (tipo == null) return;
-        
+
+        log.debug("Agregar material seleccionado tipo={}", tipo);
         try {
+            DialogoAgregarMaterial dialogo;
             switch (tipo) {
                 case "LIBRO":
-                    DialogoAgregarMaterial dialogo = new DialogoAgregarMaterial(this, "Agregar Libro", 
+                    dialogo = new DialogoAgregarMaterial(this, "Agregar Libro",
                         new String[]{"Título:", "Autor:", "Editorial:", "ISBN:", "Año:", "Páginas:", "Unidades:"});
                     dialogo.setVisible(true);
                     if (dialogo.isConfirmado()) {
                         String id = generarId("LIB");
-                        Libro libro = new Libro(id, dialogo.getValor(0), 
+                        Libro libro = new Libro(id, dialogo.getValor(0),
                             Integer.parseInt(dialogo.getValor(6)), dialogo.getValor(1),
                             dialogo.getValor(2), dialogo.getValor(3),
                             Integer.parseInt(dialogo.getValor(4)),
                             Integer.parseInt(dialogo.getValor(5)));
                         materialDAO.insertarLibro(libro);
+                        log.info("Libro agregado id={}", id);
                         JOptionPane.showMessageDialog(this, "Libro agregado: " + id);
                     }
                     break;
-                    
+
                 case "REVISTA":
                     dialogo = new DialogoAgregarMaterial(this, "Agregar Revista",
                         new String[]{"Título:", "Editorial:", "Periodicidad:", "Fecha (YYYY-MM-DD):", "Unidades:"});
@@ -270,10 +280,11 @@ public class AppPrincipal extends JFrame {
                             Integer.parseInt(dialogo.getValor(4)), dialogo.getValor(1),
                             dialogo.getValor(2), LocalDate.parse(dialogo.getValor(3)));
                         materialDAO.insertarRevista(revista);
+                        log.info("Revista agregada id={}", id);
                         JOptionPane.showMessageDialog(this, "Revista agregada: " + id);
                     }
                     break;
-                    
+
                 case "DVD":
                     dialogo = new DialogoAgregarMaterial(this, "Agregar DVD",
                         new String[]{"Título:", "Director:", "Duración (HH:MM):", "Género:", "Unidades:"});
@@ -284,10 +295,11 @@ public class AppPrincipal extends JFrame {
                             Integer.parseInt(dialogo.getValor(4)), dialogo.getValor(1),
                             dialogo.getValor(2), dialogo.getValor(3));
                         materialDAO.insertarDVD(dvd);
+                        log.info("DVD agregado id={}", id);
                         JOptionPane.showMessageDialog(this, "DVD agregado: " + id);
                     }
                     break;
-                    
+
                 case "CD":
                     dialogo = new DialogoAgregarMaterial(this, "Agregar CD",
                         new String[]{"Título:", "Artista:", "Género:", "Duración (HH:MM):", "Canciones:", "Unidades:"});
@@ -299,108 +311,113 @@ public class AppPrincipal extends JFrame {
                             dialogo.getValor(2), dialogo.getValor(3),
                             Integer.parseInt(dialogo.getValor(4)));
                         materialDAO.insertarCD(cd);
+                        log.info("CD agregado id={}", id);
                         JOptionPane.showMessageDialog(this, "CD agregado: " + id);
                     }
                     break;
             }
             refrescarVistaActual();
         } catch (Exception ex) {
+            log.error("Error al agregar material tipo={}", tipo, ex);
             showError("Error al agregar: " + ex.getMessage());
         }
     }
-    
+
     private void onModificarMaterial() {
+        log.debug("Abrir diálogo Modificar Material");
         DialogoModificarMaterial dialogo = new DialogoModificarMaterial(this);
         dialogo.setVisible(true);
         refrescarVistaActual();
     }
-    
+
     private void onBorrarMaterial() {
-    String id = JOptionPane.showInputDialog(this, "ID a borrar:");
-    if (id == null || id.isBlank()) return;
+        String id = JOptionPane.showInputDialog(this, "ID a borrar:");
+        if (id == null || id.isBlank()) return;
 
-    id = id.trim().toUpperCase();
-    int confirm = JOptionPane.showConfirmDialog(this, "¿Borrar " + id + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
-    if (confirm != JOptionPane.YES_OPTION) return;
+        id = id.trim().toUpperCase();
+        int confirm = JOptionPane.showConfirmDialog(this, "¿Borrar " + id + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) return;
 
-    try {
-        // Verifica que exista
-        Optional<Material> op = materialDAO.buscarPorId(id);
-        if (op.isEmpty()) {
-            showWarn("No encontrado");
-            return;
-        }
-
-        // ¡Borrar desde la tabla base!
-        final String sql = "DELETE FROM Material WHERE id_interno = ?";
-        try (var conn = dbConnection.getConnection();
-             var ps = conn.prepareStatement(sql)) {
-            ps.setString(1, id);
-            int filas = ps.executeUpdate();
-            if (filas == 0) {
-                showWarn("No se pudo borrar (0 filas afectadas).");
-            } else {
-                JOptionPane.showMessageDialog(this, "Borrado exitosamente");
+        log.debug("Solicitud de borrado id={}", id);
+        try {
+            Optional<Material> op = materialDAO.buscarPorId(id);
+            if (op.isEmpty()) {
+                log.warn("Intento de borrado de id inexistente={}", id);
+                showWarn("No encontrado");
+                return;
             }
-        }
-        refrescarVistaActual();
-    } catch (Exception ex) {
-        showError("Error: " + ex.getMessage());
-    }
-}
 
-    
+            // Borrar en tabla base (ON DELETE CASCADE limpia hijas)
+            final String sql = "DELETE FROM Material WHERE id_interno = ?";
+            try (var conn = dbConnection.getConnection();
+                 var ps = conn.prepareStatement(sql)) {
+                ps.setString(1, id);
+                int filas = ps.executeUpdate();
+                log.info("Borrado id={} filasMaterialBorradas={}", id, filas);
+                if (filas == 0) {
+                    showWarn("No se pudo borrar (0 filas afectadas).");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Borrado exitosamente");
+                }
+            }
+            refrescarVistaActual();
+        } catch (Exception ex) {
+            log.error("Error al borrar id={}", id, ex);
+            showError("Error: " + ex.getMessage());
+        }
+    }
+
     private void onBuscarMaterial() {
         String id = JOptionPane.showInputDialog(this, "ID a buscar:");
         if (id == null || id.isBlank()) return;
-        
+
+        id = id.trim().toUpperCase();
+        log.debug("Buscar material id={}", id);
         try {
-            Optional<Material> op = materialDAO.buscarPorId(id.trim().toUpperCase());
+            Optional<Material> op = materialDAO.buscarPorId(id);
             if (op.isEmpty()) {
+                log.info("Búsqueda sin resultados id={}", id);
                 showWarn("No encontrado");
                 return;
             }
             JOptionPane.showMessageDialog(this, detalleMaterial(op.get()), "Detalles", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception ex) {
+            log.error("Error al buscar id={}", id, ex);
             showError("Error: " + ex.getMessage());
         }
     }
-    
-   /*  private String getTablaPorId(String id) {
-        if (id.startsWith("LIB")) return "libros";
-        if (id.startsWith("REV")) return "revistas";
-        if (id.startsWith("DVD")) return "dvds";
-        if (id.startsWith("CDA")) return "cds";
-        return "material";
-    }*/
-    
+
     private String generarId(String tipo) {
-    // tipo = "LIB" | "REV" | "DVD" | "CDA"
-    final String sql = "SELECT MAX(id_interno) FROM Material WHERE id_interno LIKE ?";
-    try (var conn = dbConnection.getConnection();
-         var ps = conn.prepareStatement(sql)) {
-        ps.setString(1, tipo + "%");
-        try (var rs = ps.executeQuery()) {
-            if (rs.next()) {
-                String ultimo = rs.getString(1); // p.ej. LIB00012
-                if (ultimo != null && !ultimo.isEmpty()) {
-                    int num = Integer.parseInt(ultimo.substring(tipo.length())); // desde después del prefijo
-                    return String.format("%s%05d", tipo, num + 1);
+        // tipo = "LIB" | "REV" | "DVD" | "CDA"
+        final String sql = "SELECT MAX(id_interno) FROM Material WHERE id_interno LIKE ?";
+        try (var conn = dbConnection.getConnection();
+             var ps = conn.prepareStatement(sql)) {
+            ps.setString(1, tipo + "%");
+            try (var rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String ultimo = rs.getString(1); // p.ej. LIB00012
+                    if (ultimo != null && !ultimo.isEmpty()) {
+                        int num = Integer.parseInt(ultimo.substring(tipo.length())); // después del prefijo
+                        String nuevo = String.format("%s%05d", tipo, num + 1);
+                        log.debug("Generado nuevo ID tipo={} ultimo={} nuevo={}", tipo, ultimo, nuevo);
+                        return nuevo;
+                    }
                 }
             }
+        } catch (Exception e) {
+            log.warn("Fallo generando ID para tipo={}, usando sufijo 00001. Causa: {}", tipo, e.getMessage());
         }
-    } catch (Exception e) {
-        e.printStackTrace();
+        String fallback = tipo + "00001";
+        log.debug("Generado ID por defecto {}", fallback);
+        return fallback;
     }
-    return tipo + "00001";
-}
 
-    
     private void showCard(String name) {
         ((CardLayout) content.getLayout()).show(content, name);
+        log.trace("Mostrando tarjeta {}", name);
         refrescarVistaActual();
     }
-    
+
     private void refrescarVistaActual() {
         String currentCard = getCurrentCardName();
         switch (currentCard) {
@@ -411,8 +428,9 @@ public class AppPrincipal extends JFrame {
         }
         content.revalidate();
         content.repaint();
+        log.trace("Refrescada vista actual {}", currentCard);
     }
-    
+
     private String getCurrentCardName() {
         for (Component comp : content.getComponents()) {
             if (comp.isVisible()) {
@@ -424,15 +442,15 @@ public class AppPrincipal extends JFrame {
         }
         return "LIBROS";
     }
-    
+
     private static void showWarn(String msg) {
         JOptionPane.showMessageDialog(null, msg, "Aviso", JOptionPane.WARNING_MESSAGE);
     }
-    
+
     private static void showError(String msg) {
         JOptionPane.showMessageDialog(null, msg, "Error", JOptionPane.ERROR_MESSAGE);
     }
-    
+
     private static String detalleMaterial(Material m) {
         StringBuilder sb = new StringBuilder();
         sb.append("ID: ").append(m.getIdInterno()).append('\n')
@@ -459,7 +477,7 @@ public class AppPrincipal extends JFrame {
         }
         return sb.toString();
     }
-    
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new AppPrincipal().setVisible(true));
     }
